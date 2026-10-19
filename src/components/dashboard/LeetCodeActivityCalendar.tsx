@@ -50,6 +50,12 @@ export function LeetCodeActivityCalendar({
     }
   };
 
+  const [todayStr, setTodayStr] = useState('');
+
+  React.useEffect(() => {
+    setTodayStr(new Date().toISOString().split('T')[0]);
+  }, []);
+
   return (
     <div className="p-5 sm:p-6 rounded-3xl bg-[#0b0f17] border border-[#21262d] text-slate-100 shadow-xl overflow-hidden">
       {/* Header with stats */}
@@ -63,7 +69,7 @@ export function LeetCodeActivityCalendar({
               Activity Calendar
             </h3>
             <p className="text-[11px] text-slate-400">
-              Only active study & revision days are illuminated; inactive days remain blank
+              Only active study & revision days are illuminated • Rolls over automatically after 00:00
             </p>
           </div>
         </div>
@@ -103,17 +109,20 @@ export function LeetCodeActivityCalendar({
           <div className="flex gap-1 flex-1">
             {weeks.map((week, wIdx) => (
               <div key={wIdx} className="flex flex-col gap-1">
-                {week.map((day) => (
-                  <div
-                    key={day.date}
-                    onMouseEnter={() => setHoveredDay(day)}
-                    onMouseLeave={() => setHoveredDay(null)}
-                    className={`w-[11px] h-[11px] rounded-[2.5px] border transition-all cursor-pointer ${getColorClass(
-                      day.level
-                    )}`}
-                    title={`${day.date}: ${day.count} active contributions`}
-                  />
-                ))}
+                {week.map((day) => {
+                  const isToday = day.date === todayStr;
+                  return (
+                    <div
+                      key={day.date}
+                      onMouseEnter={() => setHoveredDay(day)}
+                      onMouseLeave={() => setHoveredDay(null)}
+                      className={`w-[11px] h-[11px] rounded-[2.5px] border transition-all cursor-pointer ${getColorClass(
+                        day.level
+                      )} ${isToday ? 'ring-1.5 ring-indigo-400 ring-offset-1 ring-offset-[#0b0f17]' : ''}`}
+                      title={`${day.date}${isToday ? ' (Today)' : ''}: ${day.count} active contributions`}
+                    />
+                  );
+                })}
               </div>
             ))}
           </div>
@@ -124,6 +133,11 @@ export function LeetCodeActivityCalendar({
           {hoveredDay ? (
             <span className="flex items-center gap-2">
               <strong className="text-white font-sans">{hoveredDay.date}:</strong>
+              {hoveredDay.date === todayStr && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500 text-white font-bold font-sans">
+                  Today
+                </span>
+              )}
               {hoveredDay.count === 0 ? (
                 <span className="text-slate-500 font-sans">No activity recorded (Blank)</span>
               ) : (
@@ -135,7 +149,7 @@ export function LeetCodeActivityCalendar({
             </span>
           ) : (
             <span className="text-slate-500 text-[10px] font-sans">
-              Hover over any square to view date and daily revision counts.
+              Hover over any square to view date and daily revision counts. (Outlined cell is Today)
             </span>
           )}
         </div>
@@ -145,7 +159,7 @@ export function LeetCodeActivityCalendar({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-[#21262d] text-xs text-slate-400 mt-2">
         <div className="flex items-center gap-1.5 text-[11px] hover:text-slate-200 cursor-pointer">
           <Info className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Active days count completed spaced repetitions, finished tasks, and focus timer blocks.</span>
+          <span>Active days count completed spaced repetitions, finished tasks, and focus timer blocks. Updates after 00:00 midnight.</span>
         </div>
 
         {/* Less to More squares */}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
 import { ToastProvider, useToast } from '@/context/ToastContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { AlarmProvider } from '@/context/AlarmContext';
@@ -82,14 +83,16 @@ function DashboardApp() {
   const [timerSubtab, setTimerSubtab] = useState<'pomodoro' | 'stopwatch'>('pomodoro');
 
   // Fetch all user data
+  // Fetch all user data (passes client local date so midnight rollover updates right after 00:00)
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
+      const clientToday = format(new Date(), 'yyyy-MM-dd');
       const [topicsRes, tasksRes, revisionsRes, statsRes] = await Promise.all([
         fetch('/api/topics'),
         fetch('/api/tasks'),
-        fetch('/api/revisions'),
-        fetch('/api/analytics'),
+        fetch(`/api/revisions?date=${clientToday}`),
+        fetch(`/api/analytics?date=${clientToday}`),
       ]);
 
       if (topicsRes.ok) {
@@ -119,6 +122,42 @@ function DashboardApp() {
   useEffect(() => {
     fetchData();
   }, [fetchData, user]);
+
+  // Midnight Rollover Listener (Updates Activity Calendar and resets daily score right after 00:00:00)
+  useEffect(() => {
+    const getMsUntilMidnight = () => {
+      const now = new Date();
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 2);
+      return Math.max(1000, tomorrow.getTime() - now.getTime());
+    };
+
+    let timerId: NodeJS.Timeout;
+    const scheduleMidnightRefresh = () => {
+      const ms = getMsUntilMidnight();
+      timerId = setTimeout(() => {
+        fetchData();
+        scheduleMidnightRefresh();
+      }, ms);
+    };
+
+    scheduleMidnightRefresh();
+
+    // Also auto-refresh when tab gains focus or device wakes up after 00:00
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+      }
+    };
+
+    window.addEventListener('focus', onVisibilityChange);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      clearTimeout(timerId);
+      window.removeEventListener('focus', onVisibilityChange);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [fetchData]);
 
   // Task Handlers
   const handleToggleTask = async (taskId: string, currentStatus: string) => {

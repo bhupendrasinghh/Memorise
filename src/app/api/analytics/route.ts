@@ -16,7 +16,11 @@ export async function GET(req: NextRequest) {
   const topics = getUserTopics(session.userId);
   const sessions = getUserSessions(session.userId);
 
-  const now = new Date();
+  const clientDate = req.nextUrl.searchParams.get('date');
+  let now = new Date();
+  if (clientDate && /^\d{4}-\d{2}-\d{2}$/.test(clientDate)) {
+    now = parseISO(clientDate);
+  }
   const todayStr = format(now, 'yyyy-MM-dd');
   const targetFocusMinutes = user?.dailyStudyTargetMinutes || 120;
 
