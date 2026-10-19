@@ -1,0 +1,688 @@
+{
+  "users": [
+    {
+      "id": "usr-demo-001",
+      "email": "demo@memorise.app",
+      "name": "Alex Rivera",
+      "passwordHash": "$2a$10$WpP901ZlE7J6fT13R4K7xOSZ3f7tK4vY8eD5PqM3o2s8wL4h6u1xK",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "dailyStudyTargetMinutes": 120,
+      "streakDays": 14,
+      "lastActiveDate": "2026-10-20",
+      "createdAt": "2026-07-22"
+    }
+  ],
+  "topics": [
+    {
+      "id": "top-001",
+      "userId": "usr-demo-001",
+      "title": "Self-Balancing AVL Trees & Rotations",
+      "subject": "Computer Science",
+      "content": "# AVL Tree Properties & Invariants\n- **Height-balancing condition**: For every node, $|height(left) - height(right)| \\le 1$.\n- **Rotations**:\n  - LL: Single Right Rotation\n  - RR: Single Left Rotation\n  - LR: Left-Right Double Rotation\n  - RL: Right-Left Double Rotation\n- **Time Complexity**: Search, Insert, and Delete are guaranteed $O(\\log n)$.\n- **Rebalancing logic**: Check balance factor during bottom-up unwinding of insertion.",
+      "tags": [
+        "Data Structures",
+        "Algorithms",
+        "Trees"
+      ],
+      "initialStudyDate": "2026-10-13",
+      "createdAt": "2026-10-13",
+      "updatedAt": "2026-10-19T18:46:21.362Z",
+      "difficulty": "medium",
+      "revisions": [
+        {
+          "id": "top-001-rev-1",
+          "topicId": "top-001",
+          "step": 1,
+          "intervalDays": 1,
+          "scheduledDate": "2026-10-14",
+          "status": "completed",
+          "completedAt": "2026-10-14",
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-001-rev-2",
+          "topicId": "top-001",
+          "step": 2,
+          "intervalDays": 3,
+          "scheduledDate": "2026-10-16",
+          "status": "completed",
+          "completedAt": "2026-10-16",
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-001-rev-3",
+          "topicId": "top-001",
+          "step": 3,
+          "intervalDays": 7,
+          "scheduledDate": "2026-10-20",
+          "status": "completed",
+          "completedAt": "2026-10-19T18:46:21.362Z",
+          "rating": "good",
+          "notes": ""
+        },
+        {
+          "id": "top-001-rev-4",
+          "topicId": "top-001",
+          "step": 4,
+          "intervalDays": 15,
+          "scheduledDate": "2026-10-28",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-001-rev-5",
+          "topicId": "top-001",
+          "step": 5,
+          "intervalDays": 30,
+          "scheduledDate": "2026-11-12",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-001-rev-6",
+          "topicId": "top-001",
+          "step": 6,
+          "intervalDays": 60,
+          "scheduledDate": "2026-12-12",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "top-002",
+      "userId": "usr-demo-001",
+      "title": "Cellular Respiration: Citric Acid Cycle & Oxidative Phosphorylation",
+      "subject": "Biochemistry",
+      "content": "# The Citric Acid (Krebs) Cycle\n- **Location**: Mitochondrial matrix.\n- **Starting substrate**: Acetyl-CoA (2 carbons) binds Oxaloacetate (4 carbons) to yield Citrate (6 carbons) via Citrate Synthase.\n- **Yield per Acetyl-CoA**:\n  - 3 NADH (yielding ~7.5 ATP)\n  - 1 FADH2 (yielding ~1.5 ATP)\n  - 1 GTP / ATP\n  - 2 CO2 released\n- **Key Regulators**: Isocitrate dehydrogenase (inhibited by high ATP/NADH; stimulated by ADP/NAD+).",
+      "tags": [
+        "Biology",
+        "Metabolism",
+        "Mitochondria"
+      ],
+      "initialStudyDate": "2026-10-17",
+      "createdAt": "2026-10-17",
+      "updatedAt": "2026-10-17",
+      "difficulty": "hard",
+      "revisions": [
+        {
+          "id": "top-002-rev-1",
+          "topicId": "top-002",
+          "step": 1,
+          "intervalDays": 1,
+          "scheduledDate": "2026-10-18",
+          "status": "completed",
+          "completedAt": "2026-10-18",
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-002-rev-2",
+          "topicId": "top-002",
+          "step": 2,
+          "intervalDays": 3,
+          "scheduledDate": "2026-10-20",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-002-rev-3",
+          "topicId": "top-002",
+          "step": 3,
+          "intervalDays": 7,
+          "scheduledDate": "2026-10-24",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-002-rev-4",
+          "topicId": "top-002",
+          "step": 4,
+          "intervalDays": 15,
+          "scheduledDate": "2026-11-01",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-002-rev-5",
+          "topicId": "top-002",
+          "step": 5,
+          "intervalDays": 30,
+          "scheduledDate": "2026-11-16",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-002-rev-6",
+          "topicId": "top-002",
+          "step": 6,
+          "intervalDays": 60,
+          "scheduledDate": "2026-12-16",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "top-003",
+      "userId": "usr-demo-001",
+      "title": "Vector Calculus: Divergence, Curl & Green’s Theorem",
+      "subject": "Mathematics",
+      "content": "# Fundamental Theorems of Vector Calculus\n- **Green's Theorem**: Relates line integral around closed curve $C$ to double integral over region $D$:\n  $$\\oint_C (L dx + M dy) = \\iint_D \\left( \\frac{\\partial M}{\\partial x} - \\frac{\\partial L}{\\partial y} \\right) dA$$\n- **Divergence**: Measure of vector field's outward flux per unit volume: $\\nabla \\cdot \\mathbf{F}$.\n- **Curl**: Measure of infinitesimal rotation: $\\nabla \\times \\mathbf{F}$.",
+      "tags": [
+        "Calculus",
+        "Vector Analysis",
+        "Physics"
+      ],
+      "initialStudyDate": "2026-08-21",
+      "createdAt": "2026-08-21",
+      "updatedAt": "2026-08-21",
+      "difficulty": "hard",
+      "revisions": [
+        {
+          "id": "top-003-rev-1",
+          "topicId": "top-003",
+          "step": 1,
+          "intervalDays": 1,
+          "scheduledDate": "2026-08-22",
+          "status": "completed",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-003-rev-2",
+          "topicId": "top-003",
+          "step": 2,
+          "intervalDays": 3,
+          "scheduledDate": "2026-08-24",
+          "status": "completed",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-003-rev-3",
+          "topicId": "top-003",
+          "step": 3,
+          "intervalDays": 7,
+          "scheduledDate": "2026-08-28",
+          "status": "completed",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-003-rev-4",
+          "topicId": "top-003",
+          "step": 4,
+          "intervalDays": 15,
+          "scheduledDate": "2026-09-05",
+          "status": "completed",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-003-rev-5",
+          "topicId": "top-003",
+          "step": 5,
+          "intervalDays": 30,
+          "scheduledDate": "2026-09-20",
+          "status": "completed",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-003-rev-6",
+          "topicId": "top-003",
+          "step": 6,
+          "intervalDays": 60,
+          "scheduledDate": "2026-10-20",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "top-004",
+      "userId": "usr-demo-001",
+      "title": "Distributed Systems: Outbox Pattern & Idempotency",
+      "subject": "System Design",
+      "content": "# Transactional Outbox Pattern\n- **Problem**: Dual-write problem when updating SQL database and publishing message to Kafka / RabbitMQ.\n- **Solution**: Save message payload inside an `outbox` table in the same DB transaction.\n- **Debezium / CDC**: Polling publisher or Change Data Capture reads from the outbox and delivers to the event bus.\n- **Idempotency keys**: Cache request keys in Redis with TTL to prevent duplicate processing.",
+      "tags": [
+        "Architecture",
+        "Distributed Systems",
+        "Kafka"
+      ],
+      "initialStudyDate": "2026-10-19",
+      "createdAt": "2026-10-19",
+      "updatedAt": "2026-10-19",
+      "difficulty": "medium",
+      "revisions": [
+        {
+          "id": "top-004-rev-1",
+          "topicId": "top-004",
+          "step": 1,
+          "intervalDays": 1,
+          "scheduledDate": "2026-10-20",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-004-rev-2",
+          "topicId": "top-004",
+          "step": 2,
+          "intervalDays": 3,
+          "scheduledDate": "2026-10-22",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-004-rev-3",
+          "topicId": "top-004",
+          "step": 3,
+          "intervalDays": 7,
+          "scheduledDate": "2026-10-26",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-004-rev-4",
+          "topicId": "top-004",
+          "step": 4,
+          "intervalDays": 15,
+          "scheduledDate": "2026-11-03",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-004-rev-5",
+          "topicId": "top-004",
+          "step": 5,
+          "intervalDays": 30,
+          "scheduledDate": "2026-11-18",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-004-rev-6",
+          "topicId": "top-004",
+          "step": 6,
+          "intervalDays": 60,
+          "scheduledDate": "2026-12-18",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "top-1792435665974-jwzk",
+      "userId": "usr-demo-001",
+      "title": "Quantum Mechanics: Wave-Particle Duality",
+      "subject": "Physics",
+      "content": "De Broglie wavelength lambda = h/p",
+      "tags": [],
+      "initialStudyDate": "2026-10-20",
+      "createdAt": "2026-10-19T18:47:45.974Z",
+      "updatedAt": "2026-10-19T18:47:45.974Z",
+      "difficulty": "medium",
+      "revisions": [
+        {
+          "id": "top-1792435665974-jwzk-rev-1",
+          "topicId": "top-1792435665974-jwzk",
+          "step": 1,
+          "intervalDays": 1,
+          "scheduledDate": "2026-10-21",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-1792435665974-jwzk-rev-2",
+          "topicId": "top-1792435665974-jwzk",
+          "step": 2,
+          "intervalDays": 3,
+          "scheduledDate": "2026-10-23",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-1792435665974-jwzk-rev-3",
+          "topicId": "top-1792435665974-jwzk",
+          "step": 3,
+          "intervalDays": 7,
+          "scheduledDate": "2026-10-27",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-1792435665974-jwzk-rev-4",
+          "topicId": "top-1792435665974-jwzk",
+          "step": 4,
+          "intervalDays": 15,
+          "scheduledDate": "2026-11-04",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-1792435665974-jwzk-rev-5",
+          "topicId": "top-1792435665974-jwzk",
+          "step": 5,
+          "intervalDays": 30,
+          "scheduledDate": "2026-11-19",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        },
+        {
+          "id": "top-1792435665974-jwzk-rev-6",
+          "topicId": "top-1792435665974-jwzk",
+          "step": 6,
+          "intervalDays": 60,
+          "scheduledDate": "2026-12-19",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
+          "notes": ""
+        }
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-001",
+      "userId": "usr-demo-001",
+      "title": "Complete Day 7 AVL Tree Rotations practice set",
+      "description": "Implement LR and RL double rotations in TypeScript and test edge cases with single node heights.",
+      "type": "daily",
+      "priority": "urgent",
+      "category": "Revision",
+      "deadline": "2026-10-20",
+      "status": "completed",
+      "subtasks": [
+        {
+          "id": "sub-1",
+          "title": "Write node height calculator function",
+          "completed": true
+        },
+        {
+          "id": "sub-2",
+          "title": "Implement rotateRight & rotateLeft",
+          "completed": true
+        },
+        {
+          "id": "sub-3",
+          "title": "Verify rebalancing on 10 random insertions",
+          "completed": true
+        }
+      ],
+      "createdAt": "2026-10-19",
+      "completedAt": "2026-10-20 00:18:21"
+    },
+    {
+      "id": "task-002",
+      "userId": "usr-demo-001",
+      "title": "Review Krebs cycle rate-limiting enzymes flashcards",
+      "description": "Memorize regulation factors for Isocitrate dehydrogenase and Alpha-ketoglutarate dehydrogenase.",
+      "type": "daily",
+      "priority": "high",
+      "category": "Study",
+      "deadline": "2026-10-20",
+      "status": "in_progress",
+      "subtasks": [
+        {
+          "id": "sub-4",
+          "title": "Active recall pass 1 (unassisted)",
+          "completed": true
+        },
+        {
+          "id": "sub-5",
+          "title": "Draw full cycle from memory",
+          "completed": false
+        }
+      ],
+      "createdAt": "2026-10-20"
+    },
+    {
+      "id": "task-003",
+      "userId": "usr-demo-001",
+      "title": "Finish 2 Pomodoro focus sessions on Distributed Systems",
+      "description": "Focus deeply for 50 minutes without checking social media or email.",
+      "type": "daily",
+      "priority": "medium",
+      "category": "Study",
+      "deadline": "2026-10-20",
+      "status": "completed",
+      "subtasks": [],
+      "createdAt": "2026-10-20",
+      "completedAt": "2026-10-20"
+    },
+    {
+      "id": "task-004",
+      "userId": "usr-demo-001",
+      "title": "Solve 15 Hard LeetCode Tree & Graph problems",
+      "description": "Focus on Topological Sort, Dijkstra, and Tarjan’s strongly connected components.",
+      "type": "weekly",
+      "priority": "high",
+      "category": "Project",
+      "deadline": "2026-10-23",
+      "status": "in_progress",
+      "subtasks": [
+        {
+          "id": "sub-6",
+          "title": "Solve 5 Tree traversal problems",
+          "completed": true
+        },
+        {
+          "id": "sub-7",
+          "title": "Solve 5 Graph DFS/BFS questions",
+          "completed": true
+        },
+        {
+          "id": "sub-8",
+          "title": "Solve 5 Shortest-path Dijkstra questions",
+          "completed": false
+        }
+      ],
+      "createdAt": "2026-10-16"
+    },
+    {
+      "id": "task-005",
+      "userId": "usr-demo-001",
+      "title": "Submit Chapter 3 Vector Calculus assignment",
+      "description": "Check divergence theorem problem sets with peer group.",
+      "type": "weekly",
+      "priority": "medium",
+      "category": "Study",
+      "deadline": "2026-10-22",
+      "status": "pending",
+      "subtasks": [],
+      "createdAt": "2026-10-18"
+    },
+    {
+      "id": "task-006",
+      "userId": "usr-demo-001",
+      "title": "Complete 30-day Spaced Repetition mastery milestone for all 5 topics",
+      "description": "Maintain 90%+ retention score across all active subjects.",
+      "type": "monthly",
+      "priority": "urgent",
+      "category": "Revision",
+      "deadline": "2026-11-04",
+      "status": "in_progress",
+      "subtasks": [
+        {
+          "id": "sub-9",
+          "title": "AVL Trees Day 15 review",
+          "completed": true
+        },
+        {
+          "id": "sub-10",
+          "title": "Krebs Cycle Day 15 review",
+          "completed": false
+        },
+        {
+          "id": "sub-11",
+          "title": "Calculus Day 30 review",
+          "completed": true
+        }
+      ],
+      "createdAt": "2026-10-05"
+    },
+    {
+      "id": "task-1792435747783-diwi",
+      "userId": "usr-demo-001",
+      "title": "Review Quantum Mechanics Notes & Solve Problems",
+      "description": "Focus on wave-particle duality and de Broglie calculations",
+      "type": "daily",
+      "priority": "medium",
+      "category": "Study",
+      "deadline": "2026-10-20",
+      "status": "pending",
+      "subtasks": [],
+      "createdAt": "2026-10-20",
+      "completedAt": null
+    }
+  ],
+  "alarms": [
+    {
+      "id": "alm-001",
+      "userId": "usr-demo-001",
+      "title": "Morning Spaced Repetition Kickoff",
+      "time": "08:30",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "enabled": false,
+      "sound": "chime",
+      "createdAt": "2026-10-10"
+    },
+    {
+      "id": "alm-002",
+      "userId": "usr-demo-001",
+      "title": "Afternoon Deep Work Study Block",
+      "time": "14:30",
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "enabled": true,
+      "sound": "bell",
+      "createdAt": "2026-10-10"
+    },
+    {
+      "id": "alm-003",
+      "userId": "usr-demo-001",
+      "title": "Evening Task & Retention Review",
+      "time": "20:00",
+      "days": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "enabled": true,
+      "sound": "digital",
+      "createdAt": "2026-10-10"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "ses-001",
+      "userId": "usr-demo-001",
+      "subject": "Computer Science",
+      "topicTitle": "Self-Balancing AVL Trees",
+      "durationSeconds": 3000,
+      "type": "pomodoro",
+      "completedAt": "2026-10-19 00:15:29"
+    },
+    {
+      "id": "ses-002",
+      "userId": "usr-demo-001",
+      "subject": "Biochemistry",
+      "topicTitle": "Citric Acid Cycle",
+      "durationSeconds": 1500,
+      "type": "pomodoro",
+      "completedAt": "2026-10-19 00:15:29"
+    },
+    {
+      "id": "ses-003",
+      "userId": "usr-demo-001",
+      "subject": "System Design",
+      "topicTitle": "Distributed Systems",
+      "durationSeconds": 3600,
+      "type": "stopwatch",
+      "completedAt": "2026-10-20 00:15:29"
+    },
+    {
+      "id": "ses-004",
+      "userId": "usr-demo-001",
+      "subject": "Mathematics",
+      "topicTitle": "Vector Calculus",
+      "durationSeconds": 2700,
+      "type": "countdown",
+      "completedAt": "2026-10-18 00:15:29"
+    },
+    {
+      "id": "ses-005",
+      "userId": "usr-demo-001",
+      "subject": "Computer Science",
+      "topicTitle": "Graph Theory",
+      "durationSeconds": 3600,
+      "type": "pomodoro",
+      "completedAt": "2026-10-17 00:15:29"
+    }
+  ]
+}

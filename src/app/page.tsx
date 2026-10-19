@@ -1,69 +1,624 @@
-import Image from "next/image";
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { ToastProvider, useToast } from '@/context/ToastContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AlarmProvider } from '@/context/AlarmContext';
+import { Navbar } from '@/components/Navbar';
+import { Sidebar } from '@/components/Sidebar';
+import { MobileNav } from '@/components/MobileNav';
+import { AuthModal } from '@/components/AuthModal';
+
+import { ProductivityCard } from '@/components/dashboard/ProductivityCard';
+import { DueRevisionsWidget } from '@/components/dashboard/DueRevisionsWidget';
+import { DailyTasksWidget } from '@/components/dashboard/DailyTasksWidget';
+import { PerformanceCharts } from '@/components/dashboard/PerformanceCharts';
+import { SubjectBreakdownCard } from '@/components/dashboard/SubjectBreakdownCard';
+
+import { TopicModal } from '@/components/revisions/TopicModal';
+import { RevisionReviewModal } from '@/components/revisions/RevisionReviewModal';
+import { TopicCard } from '@/components/revisions/TopicCard';
+import { SpacedRepetitionGuide } from '@/components/revisions/SpacedRepetitionGuide';
+
+import { TaskModal } from '@/components/tasks/TaskModal';
+import { TaskItem } from '@/components/tasks/TaskItem';
+
+import { FocusTimerView } from '@/components/timer/FocusTimerView';
+import { StopwatchView } from '@/components/timer/StopwatchView';
+import { AlarmManagerView } from '@/components/timer/AlarmManagerView';
+
+import { AnalyticsView } from '@/components/analytics/AnalyticsView';
+
+import { Topic, Task, ProductivityStats, RevisionScheduleItem, TaskType } from '@/lib/types';
+import { EnrichedRevisionItem } from './api/revisions/route';
+import {
+  Repeat,
+  CheckSquare,
+  Plus,
+  Search,
+  Filter,
+  Brain,
+  Timer,
+  Clock,
+  Sparkles,
+  Award,
+  AlertCircle,
+  HelpCircle,
+  Flame,
+} from 'lucide-react';
+
+function DashboardApp() {
+  const { user } = useAuth();
+  const { success } = useToast();
+
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  // Data states
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [stats, setStats] = useState<ProductivityStats | null>(null);
+  const [dueRevisions, setDueRevisions] = useState<EnrichedRevisionItem[]>([]);
+  const [overdueRevisions, setOverdueRevisions] = useState<EnrichedRevisionItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Modals
+  const [topicModalOpen, setTopicModalOpen] = useState(false);
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [reviewModalRevision, setReviewModalRevision] = useState<EnrichedRevisionItem | null>(null);
+
+  // Filtering for Tasks tab
+  const [taskTypeFilter, setTaskTypeFilter] = useState<'all' | TaskType>('all');
+  const [taskStatusFilter, setTaskStatusFilter] = useState<'all' | 'pending' | 'completed'>('all');
+  const [taskSearchQuery, setTaskSearchQuery] = useState('');
+
+  // Filtering for Topics tab
+  const [topicSearchQuery, setTopicSearchQuery] = useState('');
+  const [topicSubjectFilter, setTopicSubjectFilter] = useState('all');
+
+  // Subtab for Timer
+  const [timerSubtab, setTimerSubtab] = useState<'pomodoro' | 'stopwatch'>('pomodoro');
+
+  // Fetch all user data
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [topicsRes, tasksRes, revisionsRes, statsRes] = await Promise.all([
+        fetch('/api/topics'),
+        fetch('/api/tasks'),
+        fetch('/api/revisions'),
+        fetch('/api/analytics'),
+      ]);
+
+      if (topicsRes.ok) {
+        const d = await topicsRes.json();
+        setTopics(d.topics || []);
+      }
+      if (tasksRes.ok) {
+        const d = await tasksRes.json();
+        setTasks(d.tasks || []);
+      }
+      if (revisionsRes.ok) {
+        const d = await revisionsRes.json();
+        setDueRevisions(d.dueToday || []);
+        setOverdueRevisions(d.overdue || []);
+      }
+      if (statsRes.ok) {
+        const d = await statsRes.json();
+        setStats(d.stats || null);
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData, user]);
+
+  // Task Handlers
+  const handleToggleTask = async (taskId: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      if (res.ok) {
+        fetchData();
+      }
+    } catch (err) {
+      console.error('Error toggling task:', err);
+    }
+  };
+
+  const handleToggleSubtask = async (taskId: string, subtaskId: string) => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toggleSubtask: true, subtaskId }),
+      });
+      if (res.ok) {
+        fetchData();
+      }
+    } catch (err) {
+      console.error('Error toggling subtask:', err);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+      if (res.ok) {
+        success('Task Deleted', 'The task has been removed.');
+        fetchData();
+      }
+    } catch (err) {
+      console.error('Error deleting task:', err);
+    }
+  };
+
+  const handleDeleteTopic = async (topicId: string) => {
+    if (!confirm('Are you sure you want to delete this topic and its revision schedules?')) return;
+    try {
+      const res = await fetch(`/api/topics/${topicId}`, { method: 'DELETE' });
+      if (res.ok) {
+        success('Topic Deleted', 'Topic and its 6 revision intervals removed.');
+        fetchData();
+      }
+    } catch (err) {
+      console.error('Error deleting topic:', err);
+    }
+  };
+
+  // Open Review from topic card
+  const handleOpenReviewFromStep = (topic: Topic, stepItem: RevisionScheduleItem) => {
+    const enriched: EnrichedRevisionItem = {
+      ...stepItem,
+      topicTitle: topic.title,
+      subject: topic.subject,
+      tags: topic.tags,
+      topicContent: topic.content,
+      difficulty: topic.difficulty,
+      computedStatus: 'due',
+    };
+    setReviewModalRevision(enriched);
+  };
+
+  // Filtered Tasks
+  const filteredTasks = tasks.filter((t) => {
+    if (taskTypeFilter !== 'all' && t.type !== taskTypeFilter) return false;
+    if (taskStatusFilter !== 'all' && t.status !== taskStatusFilter) return false;
+    if (taskSearchQuery.trim()) {
+      const q = taskSearchQuery.toLowerCase();
+      const matchTitle = t.title.toLowerCase().includes(q);
+      const matchDesc = t.description?.toLowerCase().includes(q);
+      if (!matchTitle && !matchDesc) return false;
+    }
+    return true;
+  });
+
+  // Filtered Topics
+  const allSubjects = Array.from(new Set(topics.map((t) => t.subject)));
+  const filteredTopics = topics.filter((t) => {
+    if (topicSubjectFilter !== 'all' && t.subject !== topicSubjectFilter) return false;
+    if (topicSearchQuery.trim()) {
+      const q = topicSearchQuery.toLowerCase();
+      const matchTitle = t.title.toLowerCase().includes(q);
+      const matchNotes = t.content.toLowerCase().includes(q);
+      const matchTags = t.tags.some((tag) => tag.toLowerCase().includes(q));
+      if (!matchTitle && !matchNotes && !matchTags) return false;
+    }
+    return true;
+  });
+
+  const dueCount = dueRevisions.length + overdueRevisions.length;
+  const pendingTasksCount = tasks.filter((t) => t.status !== 'completed').length;
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-[#080c14] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
+      {/* Top Navbar */}
+      <Navbar
+        onOpenAuth={() => setAuthModalOpen(true)}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
+
+      <div className="flex-1 flex max-w-7xl w-full mx-auto">
+        {/* Desktop Sidebar */}
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          dueRevisionsCount={dueCount}
+          pendingTasksCount={pendingTasksCount}
+        />
+
+        {/* Main Content Area */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 overflow-y-auto">
+          {/* TAB 1: DASHBOARD */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6 animate-fade-in">
+              {/* Welcome Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 text-white shadow-lg relative overflow-hidden">
+                <div className="relative z-10">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-xs font-semibold backdrop-blur-md mb-2">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Spaced Repetition & Daily Productivity Hub</span>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                    Hello, {user?.name || 'Scholar'} 👋
+                  </h1>
+                  <p className="text-indigo-200 text-xs sm:text-sm mt-1 max-w-xl">
+                    You have <strong className="text-white">{dueCount} topics</strong> due for spaced repetition today and <strong className="text-white">{pendingTasksCount} active tasks</strong>.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5 relative z-10 shrink-0">
+                  <button
+                    onClick={() => setTopicModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-indigo-900 font-bold text-xs shadow-md hover:bg-indigo-50 transition-all transform active:scale-95"
+                  >
+                    <Plus className="w-4 h-4" /> Save Topic
+                  </button>
+                  <button
+                    onClick={() => setTaskModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600/80 hover:bg-indigo-600 text-white font-bold text-xs border border-white/20 transition-all transform active:scale-95"
+                  >
+                    <CheckSquare className="w-4 h-4" /> Add Task
+                  </button>
+                </div>
+              </div>
+
+              {/* Productivity Overview Gauge */}
+              <ProductivityCard stats={stats} loading={loading} />
+
+              {/* Due Revisions & Daily Tasks Side by Side */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <DueRevisionsWidget
+                  dueRevisions={dueRevisions}
+                  overdueRevisions={overdueRevisions}
+                  onOpenReview={(rev) => setReviewModalRevision(rev)}
+                  onRefresh={fetchData}
+                  onViewAllRevisions={() => setActiveTab('revisions')}
+                />
+
+                <DailyTasksWidget
+                  tasks={tasks}
+                  onToggleTask={handleToggleTask}
+                  onViewAllTasks={() => setActiveTab('tasks')}
+                  onAddTask={() => setTaskModalOpen(true)}
+                />
+              </div>
+
+              {/* 7-Day Performance Charts & Subject Breakdown */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <PerformanceCharts stats={stats} />
+                </div>
+                <div>
+                  <SubjectBreakdownCard stats={stats} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: SMART REVISIONS */}
+          {activeTab === 'revisions' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-2xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                      <Repeat className="w-5 h-5" />
+                    </div>
+                    <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
+                      Smart Revision System
+                    </h1>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Automated Day 1, 3, 7, 15, 30, and 60 spaced repetition intervals for 90%+ long-term retention
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    onClick={() => setActiveTab('guide')}
+                    className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 transition-colors"
+                  >
+                    <HelpCircle className="w-4 h-4 text-indigo-500" />
+                    <span>How it Works</span>
+                  </button>
+
+                  <button
+                    onClick={() => setTopicModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-500/25 transition-all transform active:scale-95"
+                  >
+                    <Plus className="w-4 h-4" /> Save Topic & Auto-Schedule
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Banner for Due Revisions if any */}
+              {dueCount > 0 && (
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 via-amber-500/10 to-indigo-500/10 border border-rose-300 dark:border-rose-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center font-bold text-xs">
+                      {dueCount}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                        {dueCount} Topic{dueCount > 1 ? 's' : ''} Ready for Spaced Recall Review Today
+                      </h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">
+                        Reviewing today ensures your memory curve does not decay.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const first = dueRevisions[0] || overdueRevisions[0];
+                      if (first) setReviewModalRevision(first);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition-all self-start sm:self-auto"
+                  >
+                    Start Quick Review Queue
+                  </button>
+                </div>
+              )}
+
+              {/* Search & Subject Filters */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="relative flex-1 w-full">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search topics, notes, or tags..."
+                    value={topicSearchQuery}
+                    onChange={(e) => setTopicSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <select
+                    value={topicSubjectFilter}
+                    onChange={(e) => setTopicSubjectFilter(e.target.value)}
+                    className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none"
+                  >
+                    <option value="all">All Subjects ({topics.length})</option>
+                    {allSubjects.map((sub) => (
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Topics List with 6-Interval Timelines */}
+              {filteredTopics.length === 0 ? (
+                <div className="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-900/40">
+                  <p className="text-sm text-slate-500 mb-3">No topics match your current filter.</p>
+                  <button
+                    onClick={() => setTopicModalOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold"
+                  >
+                    Save Your First Topic
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredTopics.map((topic) => (
+                    <TopicCard
+                      key={topic.id}
+                      topic={topic}
+                      onOpenReviewStep={handleOpenReviewFromStep}
+                      onDeleteTopic={handleDeleteTopic}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 3: TASK MANAGEMENT */}
+          {activeTab === 'tasks' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <CheckSquare className="w-5 h-5" />
+                    </div>
+                    <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
+                      Task Management
+                    </h1>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Create and organize daily tasks, weekly goals, and monthly milestones with subtasks
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setTaskModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/25 transition-all transform active:scale-95 self-start sm:self-auto"
+                >
+                  <Plus className="w-4 h-4" /> Create Task
+                </button>
+              </div>
+
+              {/* Timeframe Tabs: All, Daily, Weekly, Monthly */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80">
+                  {(['all', 'daily', 'weekly', 'monthly'] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTaskTypeFilter(t)}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all ${
+                        taskTypeFilter === t
+                          ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                      }`}
+                    >
+                      {t === 'all' ? 'All Tasks' : `${t} Tasks`}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <select
+                    value={taskStatusFilter}
+                    onChange={(e) => setTaskStatusFilter(e.target.value as any)}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Tasks List */}
+              {filteredTasks.length === 0 ? (
+                <div className="p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-900/40">
+                  <p className="text-sm text-slate-500 mb-3">No tasks found for the current selection.</p>
+                  <button
+                    onClick={() => setTaskModalOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold"
+                  >
+                    Add a New Task
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onToggleTask={handleToggleTask}
+                      onToggleSubtask={handleToggleSubtask}
+                      onDeleteTask={handleDeleteTask}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: STOPWATCH & FOCUS TIMER */}
+          {activeTab === 'timer' && (
+            <div className="space-y-6 max-w-3xl mx-auto animate-fade-in">
+              <div className="text-center">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
+                  Study Focus & Stopwatch
+                </h1>
+                <p className="text-xs text-slate-500 mt-1">
+                  Manage deep study sessions with Pomodoro countdowns and precision lap stopwatch
+                </p>
+
+                {/* Subtab Switch */}
+                <div className="inline-flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 mt-4">
+                  <button
+                    onClick={() => setTimerSubtab('pomodoro')}
+                    className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      timerSubtab === 'pomodoro'
+                        ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    Countdown Pomodoro
+                  </button>
+                  <button
+                    onClick={() => setTimerSubtab('stopwatch')}
+                    className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      timerSubtab === 'stopwatch'
+                        ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    Precision Stopwatch & Laps
+                  </button>
+                </div>
+              </div>
+
+              {timerSubtab === 'pomodoro' ? (
+                <FocusTimerView onSessionSaved={fetchData} />
+              ) : (
+                <StopwatchView onSessionSaved={fetchData} />
+              )}
+            </div>
+          )}
+
+          {/* TAB 5: STUDY ALARMS */}
+          {activeTab === 'alarms' && (
+            <div className="max-w-3xl mx-auto animate-fade-in">
+              <AlarmManagerView />
+            </div>
+          )}
+
+          {/* TAB 6: PERFORMANCE ANALYTICS */}
+          {activeTab === 'analytics' && (
+            <div className="animate-fade-in">
+              <AnalyticsView stats={stats} onRefresh={fetchData} />
+            </div>
+          )}
+
+          {/* TAB 7: SCIENCE & NOTIFICATION GUIDE */}
+          {activeTab === 'guide' && (
+            <div className="animate-fade-in">
+              <SpacedRepetitionGuide />
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        dueRevisionsCount={dueCount}
+      />
+
+      {/* Modals */}
+      <TopicModal
+        isOpen={topicModalOpen}
+        onClose={() => setTopicModalOpen(false)}
+        onTopicCreated={fetchData}
+      />
+
+      <TaskModal
+        isOpen={taskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        onTaskCreated={fetchData}
+      />
+
+      <RevisionReviewModal
+        revision={reviewModalRevision}
+        onClose={() => setReviewModalRevision(null)}
+        onCompleted={fetchData}
+      />
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <ToastProvider>
+      <AuthProvider>
+        <AlarmProvider>
+          <DashboardApp />
+        </AlarmProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }

@@ -1,0 +1,75 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { findUserByEmail, updateUser } from '@/lib/db';
+import { verifyPassword, signToken, setSessionCookie } from '@/lib/auth';
+import { differenceInCalendarDays, parseISO, format } from 'date-fns';
+
+export async function POST(req: NextRequest) {
+  try {
+    const { email, password } = await req.json();
+
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    }
+
+    const user = findUserByEmail(email);
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    // Special allowance for demo account or bcrypt verification
+    const isDemo = email.toLowerCase() === 'demo@memorise.app' && password === 'password123';
+    let isMatch = isDemo;
+
+    if (!isMatch) {
+      isMatch = await verifyPassword(password, user.passwordHash);
+    }
+
+    if (!isMatch) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    // Update streak if active today
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    let newStreak = user.streakDays || 1;
+
+    if (user.lastActiveDate) {
+      const diff = differenceInCalendarDays(new Date(), parseISO(user.lastActiveDate));
+      if (diff === 1) {
+        newStreak += 1; // Consecutive day streak increase!
+      } else if (diff > 1) {
+        newStreak = 1; // Streak reset
+      }
+    }
+
+    updateUser(user.id, {
+      streakDays: newStreak,
+      lastActiveDate: todayStr,
+    });
+
+    const token = signToken({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+    });
+
+    const response = NextResponse.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatar: user.avatar,
+        streakDays: newStreak,
+        dailyStudyTargetMinutes: user.dailyStudyTargetMinutes,
+        lastActiveDate: todayStr,
+        createdAt: user.createdAt,
+      },
+      token,
+    });
+
+    setSessionCookie(response, token);
+    return response;
+  } catch (err) {
+    console.error('Login error:', err);
+    return NextResponse.json({ error: 'Internal server error during login' }, { status: 500 });
+  }
+}
