@@ -29,13 +29,19 @@ A complete, modern, responsive full-stack platform built with **Next.js (App Rou
 - **Subject Mastery Breakdown**: Progress bars and distribution of topics/revisions by field of study (*Computer Science, Biochemistry, Mathematics, Physics, etc.*).
 - **Session History Log**: Tabular record of all completed focus sessions with duration and timestamps.
 
-### 4. Stopwatch, Pomodoro Focus Timer & Audio Alarms
+### 4. Global Scholars Leaderboard
+- **Top 3 Podium**: Visual ranking podium with 🥇 Gold Crown, 🥈 Silver Laurel, and 🥉 Bronze Medal.
+- **Dynamic User Standings**: Ranks all registered scholars by streak days, productivity score, focus hours, and completed spaced repetitions.
+- **Personal Standing Indicator**: Highlighted standing card showing your real-time global rank.
+- **Timeframe Filters**: Toggle between *All-Time Mastery* and *Weekly Sprint* leaderboards.
+
+### 5. Stopwatch, Pomodoro Focus Timer & Audio Alarms
 - **Precision Stopwatch**: Millisecond resolution with Start, Pause, Resume, Reset, and a Lap table that automatically flags the fastest (⚡) and slowest (🐢) laps.
 - **Countdown Pomodoro Focus Timer**: Presets for 25m Pomodoro, 50m Deep Work, 15m Sprint, 5m Break, and Custom minutes. Automatically logs study time to the database on completion.
 - **Study Alarm Clock**: Schedule alarms with specific times (`HH:mm`), days of the week, and sound presets (*chime, bell, digital beep, gong*).
 - **Pure Web Audio Synthesizer**: 100% self-contained audio synthesis with zero external MP3 dependencies.
 
-### 5. Authentication & Database Persistence
+### 6. Authentication & Database Persistence
 - **Zero-Setup Atomic Database**: File-backed storage in `data/db.json` with atomic writes.
 - **Demo Mode**: One-click instant login via demo account (`demo@memorise.app` / `password123`) or fresh registration.
 - **Per-User Isolation**: Every topic, task, revision, and alarm is indexed by `userId`.
@@ -59,8 +65,8 @@ A complete, modern, responsive full-stack platform built with **Next.js (App Rou
 
 ```bash
 # Clone the repository
-git clone https://github.com/bhupendrasinghh/Tracker.git
-cd Tracker
+git clone https://github.com/bhupendrasinghh/Memorise.git
+cd Memorise
 
 # Install dependencies
 npm install

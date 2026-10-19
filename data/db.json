@@ -593,6 +593,34 @@
       "subtasks": [],
       "createdAt": "2026-10-20",
       "completedAt": null
+    },
+    {
+      "id": "task-1792436501605-nwad",
+      "userId": "usr-1792436246351-8ejk3",
+      "title": "8-10 hrs",
+      "description": "min 8 hrs study",
+      "type": "daily",
+      "priority": "high",
+      "category": "Study",
+      "deadline": "2026-10-20",
+      "status": "pending",
+      "subtasks": [],
+      "createdAt": "2026-10-20",
+      "completedAt": null
+    },
+    {
+      "id": "task-1792436548790-8akl",
+      "userId": "usr-1792436246351-8ejk3",
+      "title": "3-4 bottle water",
+      "description": "",
+      "type": "daily",
+      "priority": "high",
+      "category": "Personal",
+      "deadline": "2026-10-20",
+      "status": "pending",
+      "subtasks": [],
+      "createdAt": "2026-10-20",
+      "completedAt": null
     }
   ],
   "alarms": [

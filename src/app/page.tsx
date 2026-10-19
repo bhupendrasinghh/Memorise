@@ -28,6 +28,7 @@ import { StopwatchView } from '@/components/timer/StopwatchView';
 import { AlarmManagerView } from '@/components/timer/AlarmManagerView';
 
 import { AnalyticsView } from '@/components/analytics/AnalyticsView';
+import { LeaderboardView } from '@/components/leaderboard/LeaderboardView';
 
 import { Topic, Task, ProductivityStats, RevisionScheduleItem, TaskType } from '@/lib/types';
 import { EnrichedRevisionItem } from './api/revisions/route';
@@ -561,7 +562,14 @@ function DashboardApp() {
             </div>
           )}
 
-          {/* TAB 6: PERFORMANCE ANALYTICS */}
+          {/* TAB 6: GLOBAL SCHOLARS LEADERBOARD */}
+          {activeTab === 'leaderboard' && (
+            <div className="animate-fade-in">
+              <LeaderboardView />
+            </div>
+          )}
+
+          {/* TAB 7: PERFORMANCE ANALYTICS */}
           {activeTab === 'analytics' && (
             <div className="animate-fade-in">
               <AnalyticsView stats={stats} onRefresh={fetchData} />

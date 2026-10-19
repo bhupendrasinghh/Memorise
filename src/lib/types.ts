@@ -140,3 +140,19 @@ export interface ProductivityStats {
     color: string;
   }[];
 }
+
+export interface LeaderboardUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  streakDays: number;
+  productivityScore: number;
+  completedRevisions: number;
+  completedTasks: number;
+  focusMinutes: number;
+  badge: string;
+  rank: number;
+  isCurrentUser?: boolean;
+}
+

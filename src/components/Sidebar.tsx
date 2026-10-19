@@ -10,6 +10,7 @@ import {
   BarChart3,
   BookOpen,
   Info,
+  Trophy,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -57,6 +58,13 @@ export function Sidebar({
       label: 'Study Alarms',
       icon: Bell,
       badge: null,
+    },
+    {
+      id: 'leaderboard',
+      label: 'Leaderboard',
+      icon: Trophy,
+      badge: 'Global',
+      badgeColor: 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300',
     },
     {
       id: 'analytics',

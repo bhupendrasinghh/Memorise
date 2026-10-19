@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { LayoutDashboard, Repeat, CheckSquare, Timer, BarChart3, Bell } from 'lucide-react';
+import { LayoutDashboard, Repeat, CheckSquare, Timer, BarChart3, Bell, Trophy } from 'lucide-react';
 
 interface MobileNavProps {
   activeTab: string;
@@ -15,7 +15,7 @@ export function MobileNav({ activeTab, setActiveTab, dueRevisionsCount = 0 }: Mo
     { id: 'revisions', label: 'Revisions', icon: Repeat, badge: dueRevisionsCount > 0 ? dueRevisionsCount : null },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'timer', label: 'Focus', icon: Timer },
-    { id: 'alarms', label: 'Alarms', icon: Bell },
+    { id: 'leaderboard', label: 'Leaders', icon: Trophy },
     { id: 'analytics', label: 'Stats', icon: BarChart3 },
   ];
 
