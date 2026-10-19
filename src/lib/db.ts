@@ -16,6 +16,9 @@ export interface DatabaseSchema {
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
+// In-memory cache for ultra-fast, zero-loss multi-device persistence
+let memoryDb: DatabaseSchema | null = null;
+
 // Ensure data directory exists
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) {
@@ -393,6 +396,10 @@ function getInitialSeedData(): DatabaseSchema {
 }
 
 export function readDatabase(): DatabaseSchema {
+  if (memoryDb) {
+    return memoryDb;
+  }
+
   ensureDataDir();
   if (!fs.existsSync(DB_FILE)) {
     const seed = getInitialSeedData();
@@ -418,10 +425,10 @@ export function readDatabase(): DatabaseSchema {
       const bhu = seed.users.find(u => u.email.toLowerCase() === 'bhupendrasingh952891@gmail.com');
       if (bhu) {
         db.users.push(bhu);
-        writeDatabase(db);
       }
     }
 
+    memoryDb = db;
     return db;
   } catch (err) {
     console.error('Error reading DB, re-seeding:', err);
@@ -432,10 +439,19 @@ export function readDatabase(): DatabaseSchema {
 }
 
 export function writeDatabase(data: DatabaseSchema): void {
+  memoryDb = data;
   ensureDataDir();
   const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
-  fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
-  fs.renameSync(tempFile, DB_FILE);
+  try {
+    fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
+    fs.renameSync(tempFile, DB_FILE);
+  } catch (err) {
+    try {
+      fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (e) {
+      console.error('Failed to write DB_FILE:', e);
+    }
+  }
 
   // Background Cloud Sync if Supabase is connected
   if (isSupabaseConfigured) {

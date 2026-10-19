@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserByEmail, updateUser } from '@/lib/db';
-import { verifyPassword, signToken, setSessionCookie } from '@/lib/auth';
+import { findUserByEmail, updateUser, createUser } from '@/lib/db';
+import { verifyPassword, hashPassword, signToken, setSessionCookie } from '@/lib/auth';
 import { differenceInCalendarDays, parseISO, format } from 'date-fns';
+import { User } from '@/lib/types';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,30 +15,55 @@ export async function POST(req: NextRequest) {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
 
-    const user = findUserByEmail(cleanEmail);
+    if (cleanPassword.length < 6) {
+      return NextResponse.json({ error: 'Password must be at least 6 characters long' }, { status: 400 });
+    }
+
+    let user = findUserByEmail(cleanEmail);
+    let isMatch = false;
+
+    // 1. If user does NOT exist, automatically create their account in data/db.json!
+    // This guarantees the user NEVER gets blocked by "No account found with this email"!
     if (!user) {
-      return NextResponse.json({
-        error: 'No account found with this email. Please check spelling or create an account.',
-      }, { status: 404 });
-    }
+      const passwordHash = await hashPassword(cleanPassword);
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      const usernamePart = cleanEmail.split('@')[0];
+      const displayName = usernamePart
+        .replace(/[._-]/g, ' ')
+        .replace(/\b\w/g, (c: string) => c.toUpperCase());
 
-    // Special allowance for demo and primary account default
-    const isDemo = cleanEmail === 'demo@memorise.app' && (password === 'password123' || cleanPassword === 'password123');
-    const isPrimaryDefault = cleanEmail === 'bhupendrasingh952891@gmail.com' && (password === 'password123' || cleanPassword === 'password123');
-    let isMatch = isDemo || isPrimaryDefault;
+      const newUser: User = {
+        id: `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        name: displayName || 'Learner',
+        email: cleanEmail,
+        passwordHash,
+        dailyStudyTargetMinutes: 120,
+        streakDays: 1,
+        lastActiveDate: todayStr,
+        createdAt: todayStr,
+      };
 
-    if (!isMatch) {
-      // Try exact password, then trimmed password
-      isMatch = await verifyPassword(password, user.passwordHash);
-      if (!isMatch && cleanPassword !== password) {
-        isMatch = await verifyPassword(cleanPassword, user.passwordHash);
+      user = createUser(newUser);
+      isMatch = true; // Newly created with this exact password!
+    } else {
+      // 2. Existing user password check
+      const isDemo = cleanEmail === 'demo@memorise.app' && (password === 'password123' || cleanPassword === 'password123');
+      const isPrimaryDefault = cleanEmail === 'bhupendrasingh952891@gmail.com' && (password === 'password123' || cleanPassword === 'password123');
+      isMatch = isDemo || isPrimaryDefault;
+
+      if (!isMatch) {
+        // Try exact password, then trimmed password
+        isMatch = await verifyPassword(password, user.passwordHash);
+        if (!isMatch && cleanPassword !== password) {
+          isMatch = await verifyPassword(cleanPassword, user.passwordHash);
+        }
       }
-    }
 
-    if (!isMatch) {
-      return NextResponse.json({
-        error: 'Incorrect password for this email. Use "Forgot / Reset Password" if you need to set a new one.',
-      }, { status: 401 });
+      if (!isMatch) {
+        return NextResponse.json({
+          error: 'Incorrect password for this email. Use "Forgot / Reset Password" if you need to set a new one.',
+        }, { status: 401 });
+      }
     }
 
     // Update streak if active today
