@@ -309,43 +309,12 @@ export function generateStarterAlarms(userId: string): StudyAlarm[] {
   ];
 }
 
-// Seed starter topics, tasks, and alarms for a new user if missing
-export function seedUserStarterContent(userId: string): void {
-  const db = readDatabase();
-  let changed = false;
-
-  const existingTopics = db.topics.filter((t) => t.userId === userId);
-  if (existingTopics.length === 0) {
-    const newTopics = generateStarterTopics(userId);
-    db.topics.push(...newTopics);
-    changed = true;
-  }
-
-  const existingTasks = db.tasks.filter((t) => t.userId === userId);
-  if (existingTasks.length === 0) {
-    const newTasks = generateStarterTasks(userId);
-    db.tasks.push(...newTasks);
-    changed = true;
-  }
-
-  const existingAlarms = db.alarms.filter((a) => a.userId === userId);
-  if (existingAlarms.length === 0) {
-    const newAlarms = generateStarterAlarms(userId);
-    db.alarms.push(...newAlarms);
-    changed = true;
-  }
-
-  if (changed) {
-    writeDatabase(db);
-  }
-}
-
 // Initial seed data generator
 function getInitialSeedData(): DatabaseSchema {
   const today = new Date();
   const todayStr = format(today, 'yyyy-MM-dd');
 
-  // Bhupendra Singh (Primary user)
+  // Bhupendra Singh (Primary user) - No dummy topics or dummy tasks! Only user's own data.
   const bhupendraUser: User = {
     id: BHUPENDRA_USER_ID,
     name: 'Bhupendra Singh',
@@ -357,7 +326,36 @@ function getInitialSeedData(): DatabaseSchema {
     createdAt: '2026-10-20',
   };
 
-  // Demo user
+  const bhupendraTasks: Task[] = [
+    {
+      id: 'task-1792436501605-nwad',
+      userId: BHUPENDRA_USER_ID,
+      title: '8-10 hrs',
+      description: 'min 8 hrs study',
+      type: 'daily',
+      priority: 'high',
+      category: 'Study',
+      deadline: todayStr,
+      status: 'pending',
+      subtasks: [],
+      createdAt: todayStr,
+    },
+    {
+      id: 'task-1792436548790-8akl',
+      userId: BHUPENDRA_USER_ID,
+      title: '3-4 bottle water',
+      description: '',
+      type: 'daily',
+      priority: 'high',
+      category: 'Personal',
+      deadline: todayStr,
+      status: 'pending',
+      subtasks: [],
+      createdAt: todayStr,
+    },
+  ];
+
+  // Demo user for visitors clicking "Demo Account"
   const demoUser: User = {
     id: DEMO_USER_ID,
     email: 'demo@memorise.app',
@@ -371,17 +369,15 @@ function getInitialSeedData(): DatabaseSchema {
   };
 
   const topics: Topic[] = [
-    ...generateStarterTopics(BHUPENDRA_USER_ID),
     ...generateStarterTopics(DEMO_USER_ID),
   ];
 
   const tasks: Task[] = [
-    ...generateStarterTasks(BHUPENDRA_USER_ID),
+    ...bhupendraTasks,
     ...generateStarterTasks(DEMO_USER_ID),
   ];
 
   const alarms: StudyAlarm[] = [
-    ...generateStarterAlarms(BHUPENDRA_USER_ID),
     ...generateStarterAlarms(DEMO_USER_ID),
   ];
 
@@ -481,13 +477,7 @@ export function updateUser(id: string, updates: Partial<User>): User | null {
 // Topics Helpers
 export function getUserTopics(userId: string): Topic[] {
   const db = readDatabase();
-  let userTopics = db.topics.filter((t) => t.userId === userId);
-  if (userTopics.length === 0) {
-    seedUserStarterContent(userId);
-    const updatedDb = readDatabase();
-    userTopics = updatedDb.topics.filter((t) => t.userId === userId);
-  }
-  return userTopics;
+  return db.topics.filter((t) => t.userId === userId);
 }
 
 export function createTopic(topic: Topic): Topic {
