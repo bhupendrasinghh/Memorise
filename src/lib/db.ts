@@ -43,21 +43,16 @@ function getInitialSeedData(): DatabaseSchema {
     id: demoUserId,
     email: 'demo@memorise.app',
     name: 'Alex Rivera',
-    passwordHash: '$2a$10$WpP901ZlE7J6fT13R4K7xOSZ3f7tK4vY8eD5PqM3o2s8wL4h6u1xK', // pre-hashed demo password
+    passwordHash: '$2a$10$WpP901ZlE7J6fT13R4K7xOSZ3f7tK4vY8eD5PqM3o2s8wL4h6u1xK', // password123
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
     dailyStudyTargetMinutes: 120,
-    streakDays: 14,
-    lastActiveDate: todayStr,
+    streakDays: 0,
+    lastActiveDate: null,
     createdAt: format(subDays(today, 90), 'yyyy-MM-dd'),
   };
 
   // 1. Topic: AVL Trees (studied 7 days ago -> Day 7 is DUE TODAY!)
   const topic1Schedule = generateRevisionSchedule('top-001', day7Ago);
-  topic1Schedule[0].status = 'completed'; // Day 1 completed
-  topic1Schedule[0].completedAt = format(subDays(today, 6), 'yyyy-MM-dd');
-  topic1Schedule[1].status = 'completed'; // Day 3 completed
-  topic1Schedule[1].completedAt = format(subDays(today, 4), 'yyyy-MM-dd');
-  // Day 7 is due today!
   topic1Schedule[2].scheduledDate = todayStr;
 
   const topic1: Topic = {
@@ -84,8 +79,6 @@ function getInitialSeedData(): DatabaseSchema {
 
   // 2. Topic: Cellular Respiration & Krebs Cycle (studied 3 days ago -> Day 3 is DUE TODAY!)
   const topic2Schedule = generateRevisionSchedule('top-002', day3Ago);
-  topic2Schedule[0].status = 'completed';
-  topic2Schedule[0].completedAt = format(subDays(today, 2), 'yyyy-MM-dd');
   topic2Schedule[1].scheduledDate = todayStr;
 
   const topic2: Topic = {
@@ -112,12 +105,7 @@ function getInitialSeedData(): DatabaseSchema {
 
   // 3. Topic: Multivariable Calculus (studied 60 days ago -> Day 60 is DUE TODAY / MASTER MILESTONE!)
   const topic3Schedule = generateRevisionSchedule('top-003', day60Ago);
-  topic3Schedule[0].status = 'completed';
-  topic3Schedule[1].status = 'completed';
-  topic3Schedule[2].status = 'completed';
-  topic3Schedule[3].status = 'completed';
-  topic3Schedule[4].status = 'completed';
-  topic3Schedule[5].scheduledDate = todayStr; // Day 60 due today!
+  topic3Schedule[5].scheduledDate = todayStr;
 
   const topic3: Topic = {
     id: 'top-003',
@@ -290,54 +278,8 @@ function getInitialSeedData(): DatabaseSchema {
     },
   ];
 
-  // Past Study Sessions for analytics
-  const sessions: StudySession[] = [
-    {
-      id: 'ses-001',
-      userId: demoUserId,
-      subject: 'Computer Science',
-      topicTitle: 'Self-Balancing AVL Trees',
-      durationSeconds: 3000, // 50 mins
-      type: 'pomodoro',
-      completedAt: format(subDays(today, 1), 'yyyy-MM-dd HH:mm:ss'),
-    },
-    {
-      id: 'ses-002',
-      userId: demoUserId,
-      subject: 'Biochemistry',
-      topicTitle: 'Citric Acid Cycle',
-      durationSeconds: 1500, // 25 mins
-      type: 'pomodoro',
-      completedAt: format(subDays(today, 1), 'yyyy-MM-dd HH:mm:ss'),
-    },
-    {
-      id: 'ses-003',
-      userId: demoUserId,
-      subject: 'System Design',
-      topicTitle: 'Distributed Systems',
-      durationSeconds: 3600, // 60 mins
-      type: 'stopwatch',
-      completedAt: format(subDays(today, 1), 'yyyy-MM-dd 22:30:00'),
-    },
-    {
-      id: 'ses-004',
-      userId: demoUserId,
-      subject: 'Mathematics',
-      topicTitle: 'Vector Calculus',
-      durationSeconds: 2700, // 45 mins
-      type: 'countdown',
-      completedAt: format(subDays(today, 2), 'yyyy-MM-dd HH:mm:ss'),
-    },
-    {
-      id: 'ses-005',
-      userId: demoUserId,
-      subject: 'Computer Science',
-      topicTitle: 'Graph Theory',
-      durationSeconds: 3600, // 60 mins
-      type: 'pomodoro',
-      completedAt: format(subDays(today, 3), 'yyyy-MM-dd HH:mm:ss'),
-    },
-  ];
+  // Focus study sessions (logged only when user actively finishes stopwatch / timer)
+  const sessions: StudySession[] = [];
 
   return {
     users: [demoUser],
@@ -383,8 +325,10 @@ export function writeDatabase(data: DatabaseSchema): void {
 
 // User Helpers
 export function findUserByEmail(email: string): User | undefined {
+  if (!email) return undefined;
+  const clean = email.trim().toLowerCase();
   const db = readDatabase();
-  return db.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  return db.users.find((u) => u.email.trim().toLowerCase() === clean);
 }
 
 export function findUserById(id: string): User | undefined {

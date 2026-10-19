@@ -11,21 +11,32 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    const user = findUserByEmail(email);
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    const user = findUserByEmail(cleanEmail);
     if (!user) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      return NextResponse.json({
+        error: 'No account found with this email. Please check spelling or create an account.',
+      }, { status: 404 });
     }
 
-    // Special allowance for demo account or bcrypt verification
-    const isDemo = email.toLowerCase() === 'demo@memorise.app' && password === 'password123';
+    // Special allowance for demo account
+    const isDemo = cleanEmail === 'demo@memorise.app' && (password === 'password123' || cleanPassword === 'password123');
     let isMatch = isDemo;
 
     if (!isMatch) {
+      // Try exact password, then trimmed password
       isMatch = await verifyPassword(password, user.passwordHash);
+      if (!isMatch && cleanPassword !== password) {
+        isMatch = await verifyPassword(cleanPassword, user.passwordHash);
+      }
     }
 
     if (!isMatch) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+      return NextResponse.json({
+        error: 'Incorrect password for this email. Use "Forgot / Reset Password" if you need to set a new one.',
+      }, { status: 401 });
     }
 
     // Update streak if active today
@@ -35,9 +46,9 @@ export async function POST(req: NextRequest) {
     if (user.lastActiveDate) {
       const diff = differenceInCalendarDays(new Date(), parseISO(user.lastActiveDate));
       if (diff === 1) {
-        newStreak += 1; // Consecutive day streak increase!
+        newStreak += 1;
       } else if (diff > 1) {
-        newStreak = 1; // Streak reset
+        newStreak = 1;
       }
     }
 

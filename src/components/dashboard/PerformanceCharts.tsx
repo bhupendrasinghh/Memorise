@@ -59,7 +59,7 @@ export function PerformanceCharts({ stats }: PerformanceChartsProps) {
       <div className="relative pt-6 pb-2">
         <div className="h-48 flex items-end justify-between gap-2 sm:gap-4 px-2">
           {weekly.map((d, idx) => {
-            const heightPercent = Math.max(12, Math.min(100, d.score));
+            const heightPercent = d.score > 0 ? Math.max(6, Math.min(100, d.score)) : 0;
             const isHovered = activeDayIdx === idx || (activeDayIdx === null && idx === weekly.length - 1);
 
             return (

@@ -102,43 +102,45 @@ export function LeaderboardView() {
         </div>
       )}
 
-      {/* Top 3 Podium */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-6 items-end pt-8 pb-4 max-w-2xl mx-auto text-center">
-        {/* 2nd Place */}
-        {top2 && (
-          <div className="flex flex-col items-center">
-            <div className="relative mb-2">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-3 border-slate-300 dark:border-slate-600 overflow-hidden shadow-md mx-auto">
-                {top2.avatar ? (
-                  <img src={top2.avatar} alt={top2.name} className="w-full h-full object-cover" />
+      {/* Real Scholars Podium (Adapts to 1, 2, or 3+ users) */}
+      {users.length === 1 && top1 && (
+        <div className="max-w-xs mx-auto text-center pt-6 pb-4">
+          <div className="flex flex-col items-center p-6 rounded-3xl glass border border-amber-400/40 shadow-xl bg-gradient-to-b from-amber-500/10 to-transparent">
+            <Crown className="w-9 h-9 text-amber-500 mb-2 animate-bounce" />
+            <div className="relative mb-3">
+              <div className="w-20 h-20 rounded-full border-4 border-amber-400 overflow-hidden shadow-xl mx-auto ring-4 ring-amber-400/20">
+                {top1.avatar ? (
+                  <img src={top1.avatar} alt={top1.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-slate-300 text-slate-700 flex items-center justify-center font-bold">
-                    {top2.name[0]}
+                  <div className="w-full h-full bg-amber-400 text-amber-950 flex items-center justify-center font-bold text-2xl">
+                    {top1.name[0]}
                   </div>
                 )}
               </div>
-              <span className="absolute -bottom-2 -right-1 px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-extrabold border border-slate-300">
-                2nd
+              <span className="absolute -bottom-2 -right-1 px-2.5 py-0.5 rounded-full bg-amber-500 text-amber-950 text-xs font-black shadow-md">
+                1st
               </span>
             </div>
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">
-              {top2.name}
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+              {top1.name} {top1.isCurrentUser && '(You)'}
+            </h3>
+            <p className="text-xs text-amber-600 dark:text-amber-400 font-extrabold flex items-center gap-1 justify-center mt-1">
+              <Flame className="w-4 h-4 fill-current" /> {top1.streakDays}d Streak • {top1.productivityScore}% Score
             </p>
-            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">
-              {top2.productivityScore}% Score
-            </p>
-            <div className="w-full h-24 sm:h-28 rounded-t-2xl bg-gradient-to-t from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-700/80 mt-2 flex items-center justify-center border-t border-x border-slate-300 dark:border-slate-600">
-              <Medal className="w-6 h-6 text-slate-400" />
+            <div className="w-full h-20 rounded-2xl bg-gradient-to-t from-amber-200 via-amber-100 to-amber-50 dark:from-amber-950/60 dark:via-amber-900/40 dark:to-amber-800/30 mt-4 flex items-center justify-center border-t-2 border-amber-400 shadow-sm">
+              <Trophy className="w-8 h-8 text-amber-500" />
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* 1st Place (Gold Podium) */}
-        {top1 && (
-          <div className="flex flex-col items-center">
-            <Crown className="w-7 h-7 text-amber-500 mb-1 animate-bounce" />
-            <div className="relative mb-2">
-              <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full border-4 border-amber-400 overflow-hidden shadow-xl mx-auto ring-4 ring-amber-400/20">
+      {users.length === 2 && (
+        <div className="grid grid-cols-2 gap-4 max-w-md mx-auto items-end pt-6 pb-4 text-center">
+          {/* 1st Place */}
+          {top1 && (
+            <div className="flex flex-col items-center p-4 rounded-2xl glass border border-amber-400/40">
+              <Crown className="w-7 h-7 text-amber-500 mb-1 animate-bounce" />
+              <div className="w-16 h-16 rounded-full border-4 border-amber-400 overflow-hidden shadow-lg mx-auto mb-2">
                 {top1.avatar ? (
                   <img src={top1.avatar} alt={top1.name} className="w-full h-full object-cover" />
                 ) : (
@@ -147,51 +149,131 @@ export function LeaderboardView() {
                   </div>
                 )}
               </div>
-              <span className="absolute -bottom-2 -right-1 px-2 py-0.5 rounded-full bg-amber-500 text-amber-950 text-[11px] font-black shadow-md">
-                1st
-              </span>
+              <p className="text-xs font-extrabold text-slate-900 dark:text-white truncate max-w-[120px]">
+                {top1.name}
+              </p>
+              <p className="text-[10px] text-amber-500 font-bold">{top1.productivityScore}% Score</p>
+              <div className="w-full h-24 rounded-t-xl bg-amber-100 dark:bg-amber-950/60 mt-2 flex items-center justify-center border-t-2 border-amber-400">
+                <Trophy className="w-6 h-6 text-amber-500" />
+              </div>
             </div>
-            <p className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[120px]">
-              {top1.name}
-            </p>
-            <p className="text-[11px] text-amber-600 dark:text-amber-400 font-extrabold flex items-center gap-0.5 justify-center">
-              <Flame className="w-3.5 h-3.5 fill-current" /> {top1.streakDays}d Streak
-            </p>
-            <div className="w-full h-32 sm:h-36 rounded-t-2xl bg-gradient-to-t from-amber-200 via-amber-100 to-amber-50 dark:from-amber-950/60 dark:via-amber-900/40 dark:to-amber-800/30 mt-2 flex items-center justify-center border-t-2 border-x-2 border-amber-400 shadow-md">
-              <Trophy className="w-8 h-8 text-amber-500" />
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* 3rd Place */}
-        {top3 && (
-          <div className="flex flex-col items-center">
-            <div className="relative mb-2">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-3 border-amber-700/60 overflow-hidden shadow-md mx-auto">
-                {top3.avatar ? (
-                  <img src={top3.avatar} alt={top3.name} className="w-full h-full object-cover" />
+          {/* 2nd Place */}
+          {top2 && (
+            <div className="flex flex-col items-center p-4 rounded-2xl glass border border-slate-300 dark:border-slate-700">
+              <div className="w-14 h-14 rounded-full border-3 border-slate-300 dark:border-slate-600 overflow-hidden shadow-md mx-auto mb-2">
+                {top2.avatar ? (
+                  <img src={top2.avatar} alt={top2.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-amber-700 text-white flex items-center justify-center font-bold">
-                    {top3.name[0]}
+                  <div className="w-full h-full bg-slate-300 text-slate-700 flex items-center justify-center font-bold">
+                    {top2.name[0]}
                   </div>
                 )}
               </div>
-              <span className="absolute -bottom-2 -right-1 px-1.5 py-0.5 rounded-full bg-amber-700 text-white text-[10px] font-extrabold">
-                3rd
-              </span>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[120px]">
+                {top2.name}
+              </p>
+              <p className="text-[10px] text-indigo-500 font-semibold">{top2.productivityScore}% Score</p>
+              <div className="w-full h-18 rounded-t-xl bg-slate-200 dark:bg-slate-800 mt-2 flex items-center justify-center border-t border-slate-300 dark:border-slate-600">
+                <Medal className="w-5 h-5 text-slate-400" />
+              </div>
             </div>
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">
-              {top3.name}
-            </p>
-            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">
-              {top3.productivityScore}% Score
-            </p>
-            <div className="w-full h-20 sm:h-24 rounded-t-2xl bg-gradient-to-t from-amber-100/70 to-amber-50 dark:from-slate-800 dark:to-slate-800/60 mt-2 flex items-center justify-center border-t border-x border-amber-700/30">
-              <Medal className="w-5 h-5 text-amber-700" />
+          )}
+        </div>
+      )}
+
+      {users.length >= 3 && (
+        <div className="grid grid-cols-3 gap-3 sm:gap-6 items-end pt-8 pb-4 max-w-2xl mx-auto text-center">
+          {/* 2nd Place */}
+          {top2 && (
+            <div className="flex flex-col items-center">
+              <div className="relative mb-2">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-3 border-slate-300 dark:border-slate-600 overflow-hidden shadow-md mx-auto">
+                  {top2.avatar ? (
+                    <img src={top2.avatar} alt={top2.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-slate-300 text-slate-700 flex items-center justify-center font-bold">
+                      {top2.name[0]}
+                    </div>
+                  )}
+                </div>
+                <span className="absolute -bottom-2 -right-1 px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-extrabold border border-slate-300">
+                  2nd
+                </span>
+              </div>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">
+                {top2.name}
+              </p>
+              <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">
+                {top2.productivityScore}% Score
+              </p>
+              <div className="w-full h-24 sm:h-28 rounded-t-2xl bg-gradient-to-t from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-700/80 mt-2 flex items-center justify-center border-t border-x border-slate-300 dark:border-slate-600">
+                <Medal className="w-6 h-6 text-slate-400" />
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+
+          {/* 1st Place (Gold Podium) */}
+          {top1 && (
+            <div className="flex flex-col items-center">
+              <Crown className="w-7 h-7 text-amber-500 mb-1 animate-bounce" />
+              <div className="relative mb-2">
+                <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full border-4 border-amber-400 overflow-hidden shadow-xl mx-auto ring-4 ring-amber-400/20">
+                  {top1.avatar ? (
+                    <img src={top1.avatar} alt={top1.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-amber-400 text-amber-950 flex items-center justify-center font-bold">
+                      {top1.name[0]}
+                    </div>
+                  )}
+                </div>
+                <span className="absolute -bottom-2 -right-1 px-2 py-0.5 rounded-full bg-amber-500 text-amber-950 text-[11px] font-black shadow-md">
+                  1st
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white truncate max-w-[120px]">
+                {top1.name}
+              </p>
+              <p className="text-[11px] text-amber-600 dark:text-amber-400 font-extrabold flex items-center gap-0.5 justify-center">
+                <Flame className="w-3.5 h-3.5 fill-current" /> {top1.streakDays}d Streak
+              </p>
+              <div className="w-full h-32 sm:h-36 rounded-t-2xl bg-gradient-to-t from-amber-200 via-amber-100 to-amber-50 dark:from-amber-950/60 dark:via-amber-900/40 dark:to-amber-800/30 mt-2 flex items-center justify-center border-t-2 border-x-2 border-amber-400 shadow-md">
+                <Trophy className="w-8 h-8 text-amber-500" />
+              </div>
+            </div>
+          )}
+
+          {/* 3rd Place */}
+          {top3 && (
+            <div className="flex flex-col items-center">
+              <div className="relative mb-2">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-3 border-amber-700/60 overflow-hidden shadow-md mx-auto">
+                  {top3.avatar ? (
+                    <img src={top3.avatar} alt={top3.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-amber-700 text-white flex items-center justify-center font-bold">
+                      {top3.name[0]}
+                    </div>
+                  )}
+                </div>
+                <span className="absolute -bottom-2 -right-1 px-1.5 py-0.5 rounded-full bg-amber-700 text-white text-[10px] font-extrabold">
+                  3rd
+                </span>
+              </div>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[100px]">
+                {top3.name}
+              </p>
+              <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">
+                {top3.productivityScore}% Score
+              </p>
+              <div className="w-full h-20 sm:h-24 rounded-t-2xl bg-gradient-to-t from-amber-100/70 to-amber-50 dark:from-slate-800 dark:to-slate-800/60 mt-2 flex items-center justify-center border-t border-x border-amber-700/30">
+                <Medal className="w-5 h-5 text-amber-700" />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Complete Rankings Table */}
       <div className="p-6 rounded-3xl glass border border-slate-200/80 dark:border-slate-800/80 shadow-sm">

@@ -90,7 +90,7 @@ export interface User {
   avatar?: string;
   dailyStudyTargetMinutes: number;
   streakDays: number;
-  lastActiveDate: string; // YYYY-MM-DD
+  lastActiveDate?: string | null; // YYYY-MM-DD
   createdAt: string;
 }
 
@@ -101,7 +101,7 @@ export interface UserPublicProfile {
   avatar?: string;
   dailyStudyTargetMinutes: number;
   streakDays: number;
-  lastActiveDate: string;
+  lastActiveDate?: string | null;
   createdAt: string;
 }
 

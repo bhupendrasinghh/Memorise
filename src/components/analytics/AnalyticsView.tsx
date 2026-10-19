@@ -69,7 +69,7 @@ export function AnalyticsView({ stats, onRefresh }: AnalyticsViewProps) {
             <span>Current Streak</span>
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-            {stats?.streakDays || 1} Days
+            {stats?.streakDays || 0} Days
           </div>
           <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-1">
             Active daily study

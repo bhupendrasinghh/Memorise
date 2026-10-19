@@ -9,6 +9,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
+  resetPassword: (email: string, newPassword: string) => Promise<boolean>;
   logout: () => Promise<void>;
   loginAsDemo: () => Promise<boolean>;
   refreshUser: () => Promise<void>;
@@ -87,6 +88,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resetPassword = async (email: string, newPassword: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        error('Reset failed', data.error || 'Could not reset password');
+        return false;
+      }
+
+      setUser(data.user);
+      success('Password Updated!', `You are now logged in as ${data.user.name}`);
+      return true;
+    } catch {
+      error('Connection Error', 'Could not reach the authentication service');
+      return false;
+    }
+  };
+
   const logout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -102,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, loginAsDemo, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, resetPassword, logout, loginAsDemo, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

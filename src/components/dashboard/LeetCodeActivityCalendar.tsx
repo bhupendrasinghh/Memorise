@@ -60,7 +60,7 @@ export function LeetCodeActivityCalendar({
           </div>
           <div>
             <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight flex items-center gap-2">
-              LeetCode Study Activity Calendar
+              Activity Calendar
             </h3>
             <p className="text-[11px] text-slate-400">
               Only active study & revision days are illuminated; inactive days remain blank

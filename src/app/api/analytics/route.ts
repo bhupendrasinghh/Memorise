@@ -249,14 +249,14 @@ export async function GET(req: NextRequest) {
     todayFocusMinutes,
     targetFocusMinutes,
     focusGoalRate,
-    streakDays: user?.streakDays || 1,
+    streakDays: user?.streakDays || 0,
     totalTopicsCount: topics.length,
     masteredTopicsCount,
     weeklyData,
     subjectBreakdown,
     activityHeatmap,
     totalActiveDays,
-    maxStreak: Math.max(maxStreak, user?.streakDays || 1),
+    maxStreak,
   };
 
   return NextResponse.json({ stats: responseStats });

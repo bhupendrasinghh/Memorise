@@ -2,17 +2,17 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { X, Mail, Lock, User as UserIcon, Sparkles, Check, ArrowRight } from 'lucide-react';
+import { X, Mail, Lock, User as UserIcon, Sparkles, ArrowRight, KeyRound } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  initialMode?: 'login' | 'register';
+  initialMode?: 'login' | 'register' | 'reset';
 }
 
 export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalProps) {
-  const { login, register, loginAsDemo } = useAuth();
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+  const { login, register, resetPassword, loginAsDemo } = useAuth();
+  const [mode, setMode] = useState<'login' | 'register' | 'reset'>(initialMode);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,12 +24,18 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
     e.preventDefault();
     setIsSubmitting(true);
 
+    const cleanEmail = email.trim();
+    const cleanPassword = password.trim();
+
     try {
       if (mode === 'login') {
-        const ok = await login(email, password);
+        const ok = await login(cleanEmail, cleanPassword);
+        if (ok) onClose();
+      } else if (mode === 'register') {
+        const ok = await register(name.trim(), cleanEmail, cleanPassword);
         if (ok) onClose();
       } else {
-        const ok = await register(name, email, password);
+        const ok = await resetPassword(cleanEmail, cleanPassword);
         if (ok) onClose();
       }
     } finally {
@@ -59,41 +65,47 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
 
         <div className="text-center mb-6">
           <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-3 shadow-lg shadow-indigo-500/30">
-            <Sparkles className="w-6 h-6" />
+            {mode === 'reset' ? <KeyRound className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
           </div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-            {mode === 'login' ? 'Welcome Back' : 'Create an Account'}
+            {mode === 'login' && 'Welcome Back'}
+            {mode === 'register' && 'Create an Account'}
+            {mode === 'reset' && 'Reset Password'}
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            {mode === 'login'
-              ? 'Sign in to access your notes, revisions, and task schedules'
-              : 'Join Memorise to start your spaced repetition journey'}
+            {mode === 'login' && 'Sign in to access your notes, revisions, and task schedules'}
+            {mode === 'register' && 'Join Memorise to start your spaced repetition journey'}
+            {mode === 'reset' && 'Enter your registered email and choose a new password'}
           </p>
         </div>
 
-        {/* Demo Account Quick Access Button */}
-        <button
-          onClick={handleDemoClick}
-          disabled={isSubmitting}
-          className="w-full mb-5 py-3 px-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-indigo-500/30 dark:border-indigo-400/30 flex items-center justify-between group transition-all"
-        >
-          <div className="flex items-center gap-2.5 text-left">
-            <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4" />
-            </span>
-            <div>
-              <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">Instant Demo Login</p>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400">Preloaded with real topics, tasks & streak</p>
-            </div>
-          </div>
-          <ArrowRight className="w-4 h-4 text-indigo-600 dark:text-indigo-400 transform group-hover:translate-x-1 transition-transform" />
-        </button>
+        {/* Demo Account Quick Access Button (only on login mode) */}
+        {mode === 'login' && (
+          <>
+            <button
+              onClick={handleDemoClick}
+              disabled={isSubmitting}
+              className="w-full mb-5 py-3 px-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-indigo-500/30 dark:border-indigo-400/30 flex items-center justify-between group transition-all"
+            >
+              <div className="flex items-center gap-2.5 text-left">
+                <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4" />
+                </span>
+                <div>
+                  <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">Instant Demo Login</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">demo@memorise.app • password123</p>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-indigo-600 dark:text-indigo-400 transform group-hover:translate-x-1 transition-transform" />
+            </button>
 
-        <div className="relative flex py-2 items-center mb-5">
-          <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-          <span className="flex-shrink mx-3 text-xs text-slate-400 uppercase font-medium">Or continue with email</span>
-          <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-        </div>
+            <div className="relative flex py-2 items-center mb-5">
+              <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+              <span className="flex-shrink mx-3 text-xs text-slate-400 uppercase font-medium">Or continue with email</span>
+              <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+            </div>
+          </>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'register' && (
@@ -133,9 +145,20 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                {mode === 'reset' ? 'New Password (min 6 chars)' : 'Password'}
+              </label>
+              {mode === 'login' && (
+                <button
+                  type="button"
+                  onClick={() => setMode('reset')}
+                  className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline"
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -158,19 +181,30 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login' }: AuthModalP
               ? 'Processing...'
               : mode === 'login'
               ? 'Sign In'
-              : 'Create Account'}
+              : mode === 'register'
+              ? 'Create Account'
+              : 'Update Password & Sign In'}
           </button>
         </form>
 
-        <div className="text-center mt-5">
-          <button
-            onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-            className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
-          >
-            {mode === 'login'
-              ? "Don't have an account? Sign up"
-              : 'Already have an account? Sign in'}
-          </button>
+        <div className="text-center mt-5 space-y-2">
+          {mode === 'reset' ? (
+            <button
+              onClick={() => setMode('login')}
+              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+            >
+              ← Back to Sign in
+            </button>
+          ) : (
+            <button
+              onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+            >
+              {mode === 'login'
+                ? "Don't have an account? Sign up"
+                : 'Already have an account? Sign in'}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -7,7 +7,7 @@
       "passwordHash": "$2a$10$WpP901ZlE7J6fT13R4K7xOSZ3f7tK4vY8eD5PqM3o2s8wL4h6u1xK",
       "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
       "dailyStudyTargetMinutes": 120,
-      "streakDays": 14,
+      "streakDays": 1,
       "lastActiveDate": "2026-10-20",
       "createdAt": "2026-07-22"
     },
@@ -15,7 +15,7 @@
       "id": "usr-1792436246351-8ejk3",
       "name": "Bhupendra Singh",
       "email": "bhupendrasingh952891@gmail.com",
-      "passwordHash": "$2b$10$RDohRkmiRpn/GlKIjx.CAO57.wlI9Fh0yKgpKTQ.MiqoiWucrlzGO",
+      "passwordHash": "$2b$10$.Wmd7rXm1gGXTfU4zCtoveOerzJKWeZAweasEdd6kbIzYOnmrCEyC",
       "dailyStudyTargetMinutes": 120,
       "streakDays": 1,
       "lastActiveDate": "2026-10-20",
@@ -45,8 +45,8 @@
           "step": 1,
           "intervalDays": 1,
           "scheduledDate": "2026-10-14",
-          "status": "completed",
-          "completedAt": "2026-10-14",
+          "status": "pending",
+          "completedAt": null,
           "rating": null,
           "notes": ""
         },
@@ -56,8 +56,8 @@
           "step": 2,
           "intervalDays": 3,
           "scheduledDate": "2026-10-16",
-          "status": "completed",
-          "completedAt": "2026-10-16",
+          "status": "pending",
+          "completedAt": null,
           "rating": null,
           "notes": ""
         },
@@ -67,9 +67,9 @@
           "step": 3,
           "intervalDays": 7,
           "scheduledDate": "2026-10-20",
-          "status": "completed",
-          "completedAt": "2026-10-19T18:46:21.362Z",
-          "rating": "good",
+          "status": "pending",
+          "completedAt": null,
+          "rating": null,
           "notes": ""
         },
         {
@@ -129,8 +129,8 @@
           "step": 1,
           "intervalDays": 1,
           "scheduledDate": "2026-10-18",
-          "status": "completed",
-          "completedAt": "2026-10-18",
+          "status": "pending",
+          "completedAt": null,
           "rating": null,
           "notes": ""
         },
@@ -213,7 +213,7 @@
           "step": 1,
           "intervalDays": 1,
           "scheduledDate": "2026-08-22",
-          "status": "completed",
+          "status": "pending",
           "completedAt": null,
           "rating": null,
           "notes": ""
@@ -224,7 +224,7 @@
           "step": 2,
           "intervalDays": 3,
           "scheduledDate": "2026-08-24",
-          "status": "completed",
+          "status": "pending",
           "completedAt": null,
           "rating": null,
           "notes": ""
@@ -235,7 +235,7 @@
           "step": 3,
           "intervalDays": 7,
           "scheduledDate": "2026-08-28",
-          "status": "completed",
+          "status": "pending",
           "completedAt": null,
           "rating": null,
           "notes": ""
@@ -246,7 +246,7 @@
           "step": 4,
           "intervalDays": 15,
           "scheduledDate": "2026-09-05",
-          "status": "completed",
+          "status": "pending",
           "completedAt": null,
           "rating": null,
           "notes": ""
@@ -257,7 +257,7 @@
           "step": 5,
           "intervalDays": 30,
           "scheduledDate": "2026-09-20",
-          "status": "completed",
+          "status": "pending",
           "completedAt": null,
           "rating": null,
           "notes": ""
@@ -480,12 +480,12 @@
       "priority": "high",
       "category": "Study",
       "deadline": "2026-10-20",
-      "status": "in_progress",
+      "status": "pending",
       "subtasks": [
         {
           "id": "sub-4",
           "title": "Active recall pass 1 (unassisted)",
-          "completed": true
+          "completed": false
         },
         {
           "id": "sub-5",
@@ -493,7 +493,8 @@
           "completed": false
         }
       ],
-      "createdAt": "2026-10-20"
+      "createdAt": "2026-10-20",
+      "completedAt": null
     },
     {
       "id": "task-003",
@@ -518,17 +519,17 @@
       "priority": "high",
       "category": "Project",
       "deadline": "2026-10-23",
-      "status": "in_progress",
+      "status": "pending",
       "subtasks": [
         {
           "id": "sub-6",
           "title": "Solve 5 Tree traversal problems",
-          "completed": true
+          "completed": false
         },
         {
           "id": "sub-7",
           "title": "Solve 5 Graph DFS/BFS questions",
-          "completed": true
+          "completed": false
         },
         {
           "id": "sub-8",
@@ -536,7 +537,8 @@
           "completed": false
         }
       ],
-      "createdAt": "2026-10-16"
+      "createdAt": "2026-10-16",
+      "completedAt": null
     },
     {
       "id": "task-005",
@@ -549,7 +551,8 @@
       "deadline": "2026-10-22",
       "status": "pending",
       "subtasks": [],
-      "createdAt": "2026-10-18"
+      "createdAt": "2026-10-18",
+      "completedAt": null
     },
     {
       "id": "task-006",
@@ -560,12 +563,12 @@
       "priority": "urgent",
       "category": "Revision",
       "deadline": "2026-11-04",
-      "status": "in_progress",
+      "status": "pending",
       "subtasks": [
         {
           "id": "sub-9",
           "title": "AVL Trees Day 15 review",
-          "completed": true
+          "completed": false
         },
         {
           "id": "sub-10",
@@ -575,10 +578,11 @@
         {
           "id": "sub-11",
           "title": "Calculus Day 30 review",
-          "completed": true
+          "completed": false
         }
       ],
-      "createdAt": "2026-10-05"
+      "createdAt": "2026-10-05",
+      "completedAt": null
     },
     {
       "id": "task-1792435747783-diwi",
@@ -676,51 +680,5 @@
       "createdAt": "2026-10-10"
     }
   ],
-  "sessions": [
-    {
-      "id": "ses-001",
-      "userId": "usr-demo-001",
-      "subject": "Computer Science",
-      "topicTitle": "Self-Balancing AVL Trees",
-      "durationSeconds": 3000,
-      "type": "pomodoro",
-      "completedAt": "2026-10-19 00:15:29"
-    },
-    {
-      "id": "ses-002",
-      "userId": "usr-demo-001",
-      "subject": "Biochemistry",
-      "topicTitle": "Citric Acid Cycle",
-      "durationSeconds": 1500,
-      "type": "pomodoro",
-      "completedAt": "2026-10-19 00:15:29"
-    },
-    {
-      "id": "ses-003",
-      "userId": "usr-demo-001",
-      "subject": "System Design",
-      "topicTitle": "Distributed Systems",
-      "durationSeconds": 3600,
-      "type": "stopwatch",
-      "completedAt": "2026-10-19 22:30:00"
-    },
-    {
-      "id": "ses-004",
-      "userId": "usr-demo-001",
-      "subject": "Mathematics",
-      "topicTitle": "Vector Calculus",
-      "durationSeconds": 2700,
-      "type": "countdown",
-      "completedAt": "2026-10-18 00:15:29"
-    },
-    {
-      "id": "ses-005",
-      "userId": "usr-demo-001",
-      "subject": "Computer Science",
-      "topicTitle": "Graph Theory",
-      "durationSeconds": 3600,
-      "type": "pomodoro",
-      "completedAt": "2026-10-17 00:15:29"
-    }
-  ]
+  "sessions": []
 }
