@@ -10,6 +10,16 @@
       "streakDays": 14,
       "lastActiveDate": "2026-10-20",
       "createdAt": "2026-07-22"
+    },
+    {
+      "id": "usr-1792436246351-8ejk3",
+      "name": "Bhupendra Singh",
+      "email": "bhupendrasingh952891@gmail.com",
+      "passwordHash": "$2b$10$RDohRkmiRpn/GlKIjx.CAO57.wlI9Fh0yKgpKTQ.MiqoiWucrlzGO",
+      "dailyStudyTargetMinutes": 120,
+      "streakDays": 1,
+      "lastActiveDate": "2026-10-20",
+      "createdAt": "2026-10-20"
     }
   ],
   "topics": [
