@@ -70,6 +70,7 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
+URL https://memorise-0t01.onrender.com
 
 ### Instant Demo Credentials
 - **Email**: `demo@memorise.app`
