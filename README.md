@@ -22,16 +22,17 @@ A complete, modern, responsive full-stack platform built with **Next.js (App Rou
 - **Celebration Feedback**: Confetti burst effects and audio chimes upon completion.
 
 ### 3. Automatic Performance Dashboard & Analytics
-- **Dynamic Productivity Percentage**: Automatically calculated using a weighted composite formula:
+- **Starts at 0% Every Day**: Today's productivity score starts strictly at 0% at the start of each day, advancing dynamically towards 100% as you complete today's daily tasks, finish scheduled spaced-repetition revisions, and log deep study focus minutes:
   $$\text{Productivity Score} = 0.4 \times \text{RevisionRate} + 0.4 \times \text{TaskRate} + 0.2 \times \text{FocusGoalRate}$$
+- **LeetCode-Style Dark Daily Activity Calendar**: 52-week annual heatmap (364 days) featuring LeetCode dark aesthetics (`#161b22` blank/inactive days, `#0e4429` to `#39d353` active greens), **Mon / Wed / Fri** row labels, month interval headers, and interactive hover tooltips displaying study breakdown.
 - **Interactive 7-Day Trend Chart**: SVG bar chart with score tooltips, daily focus time, completed tasks, and revision counts.
 - **Study Streak Tracker**: Flame badge tracking active daily streaks.
 - **Subject Mastery Breakdown**: Progress bars and distribution of topics/revisions by field of study (*Computer Science, Biochemistry, Mathematics, Physics, etc.*).
 - **Session History Log**: Tabular record of all completed focus sessions with duration and timestamps.
 
-### 4. Global Scholars Leaderboard
+### 4. Global Scholars Leaderboard (Order App Style Rankings)
 - **Top 3 Podium**: Visual ranking podium with 🥇 Gold Crown, 🥈 Silver Laurel, and 🥉 Bronze Medal.
-- **Dynamic User Standings**: Ranks all registered scholars by streak days, productivity score, focus hours, and completed spaced repetitions.
+- **Dynamic User Standings**: Ranks all registered scholars like an ordering app by streak days, productivity score, focus hours, and completed spaced repetitions.
 - **Personal Standing Indicator**: Highlighted standing card showing your real-time global rank.
 - **Timeframe Filters**: Toggle between *All-Time Mastery* and *Weekly Sprint* leaderboards.
 
