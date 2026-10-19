@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromRequest } from '@/lib/auth';
 import { getUserTopics, updateTopic } from '@/lib/db';
 import { processRevisionCompletion } from '@/lib/spaced-repetition';
+import { format } from 'date-fns';
 
 export async function PATCH(
   req: NextRequest,
@@ -14,7 +15,7 @@ export async function PATCH(
 
   const { id: revisionId } = await params;
   const body = await req.json();
-  const { rating = 'good', notes = '', status = 'completed', newScheduledDate } = body;
+  const { rating = 'good', notes = '', status = 'completed', newScheduledDate, completedAt: clientCompletedAt, clientDate } = body;
 
   const topics = getUserTopics(session.userId);
   const targetTopic = topics.find((t) => t.revisions.some((r) => r.id === revisionId));
@@ -31,11 +32,13 @@ export async function PATCH(
   let updatedRevisions = [...targetTopic.revisions];
 
   if (status === 'completed') {
+    const completionDate = clientCompletedAt || (clientDate ? `${clientDate} ${format(new Date(), 'HH:mm:ss')}` : format(new Date(), 'yyyy-MM-dd HH:mm:ss'));
     updatedRevisions = processRevisionCompletion(
       updatedRevisions,
       targetRevision.step,
       rating,
-      notes
+      notes,
+      completionDate
     );
   } else if (newScheduledDate) {
     // Reschedule

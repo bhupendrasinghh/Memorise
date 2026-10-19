@@ -7,6 +7,7 @@ import confetti from 'canvas-confetti';
 import { soundEngine } from '@/lib/audio';
 import { useToast } from '@/context/ToastContext';
 import { RevisionRating } from '@/lib/types';
+import { format } from 'date-fns';
 
 interface RevisionReviewModalProps {
   revision: EnrichedRevisionItem | null;
@@ -28,6 +29,8 @@ export function RevisionReviewModal({
 
   const handleRate = async (rating: RevisionRating) => {
     setIsSubmitting(true);
+    const localNow = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+    const localDate = format(new Date(), 'yyyy-MM-dd');
     try {
       const res = await fetch(`/api/revisions/${revision.id}`, {
         method: 'PATCH',
@@ -36,6 +39,8 @@ export function RevisionReviewModal({
           rating,
           notes: reviewNotes,
           status: 'completed',
+          completedAt: localNow,
+          clientDate: localDate,
         }),
       });
 

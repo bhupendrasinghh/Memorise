@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Flag, Save, CheckCircle2, Clock } from 'lucide-react';
 import { soundEngine } from '@/lib/audio';
 import { useToast } from '@/context/ToastContext';
+import { format } from 'date-fns';
 
 interface LapTime {
   lapNumber: number;
@@ -74,6 +75,8 @@ export function StopwatchView({ onSessionSaved }: { onSessionSaved?: () => void 
 
     setIsSaving(true);
     try {
+      const localNow = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+      const localDate = format(new Date(), 'yyyy-MM-dd');
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,6 +85,8 @@ export function StopwatchView({ onSessionSaved }: { onSessionSaved?: () => void 
           durationSeconds: Math.round(elapsedMs / 1000),
           type: 'stopwatch',
           notes: `Tracked with stopwatch (${laps.length} laps recorded)`,
+          completedAt: localNow,
+          clientDate: localDate,
         }),
       });
 

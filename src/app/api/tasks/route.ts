@@ -52,13 +52,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { title, description = '', type = 'daily', priority = 'medium', category = 'Study', deadline, subtasks = [] } = body;
+    const { title, description = '', type = 'daily', priority = 'medium', category = 'Study', deadline, subtasks = [], clientDate } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Task title is required' }, { status: 400 });
     }
 
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const todayStr = clientDate && /^\d{4}-\d{2}-\d{2}$/.test(clientDate) ? clientDate : format(new Date(), 'yyyy-MM-dd');
     const taskId = `task-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
     const newTask: Task = {

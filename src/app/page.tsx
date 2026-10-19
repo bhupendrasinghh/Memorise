@@ -164,11 +164,17 @@ function DashboardApp() {
   // Task Handlers
   const handleToggleTask = async (taskId: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'completed' ? 'pending' : 'completed';
+    const localNow = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+    const clientDate = format(new Date(), 'yyyy-MM-dd');
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: nextStatus }),
+        body: JSON.stringify({
+          status: nextStatus,
+          completedAt: nextStatus === 'completed' ? localNow : null,
+          clientDate,
+        }),
       });
       if (res.ok) {
         fetchData();
@@ -179,11 +185,18 @@ function DashboardApp() {
   };
 
   const handleToggleSubtask = async (taskId: string, subtaskId: string) => {
+    const localNow = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+    const clientDate = format(new Date(), 'yyyy-MM-dd');
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ toggleSubtask: true, subtaskId }),
+        body: JSON.stringify({
+          toggleSubtask: true,
+          subtaskId,
+          completedAt: localNow,
+          clientDate,
+        }),
       });
       if (res.ok) {
         fetchData();

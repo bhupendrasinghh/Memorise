@@ -56,16 +56,17 @@ export function processRevisionCompletion(
   currentSchedule: RevisionScheduleItem[],
   stepToComplete: number,
   rating: RevisionRating = 'good',
-  notes?: string
+  notes?: string,
+  completedAt?: string
 ): RevisionScheduleItem[] {
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const completionDate = completedAt || format(new Date(), 'yyyy-MM-dd HH:mm:ss');
 
   return currentSchedule.map((item) => {
     if (item.step === stepToComplete) {
       return {
         ...item,
         status: 'completed' as const,
-        completedAt: new Date().toISOString(),
+        completedAt: completionDate,
         rating,
         notes: notes || item.notes,
       };

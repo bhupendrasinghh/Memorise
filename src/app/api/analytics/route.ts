@@ -24,13 +24,33 @@ export async function GET(req: NextRequest) {
   const todayStr = format(now, 'yyyy-MM-dd');
   const targetFocusMinutes = user?.dailyStudyTargetMinutes || 120;
 
+  // Timezone-safe date matcher (handles direct YYYY-MM-DD prefix, ISO strings, and IST UTC+5:30 offset)
+  const matchesDate = (timestampStr: string | null | undefined, targetDate: string): boolean => {
+    if (!timestampStr) return false;
+    // 1. Direct prefix match: "2026-10-20 03:35:00" or "2026-10-20"
+    if (timestampStr.startsWith(targetDate)) return true;
+    // 2. ISO timestamp: parse date and handle UTC to IST timezone translation
+    if (timestampStr.includes('T') || timestampStr.endsWith('Z')) {
+      try {
+        const d = new Date(timestampStr);
+        if (!isNaN(d.getTime())) {
+          if (format(d, 'yyyy-MM-dd') === targetDate) return true;
+          // When server is in UTC (e.g. Render), adjust +5.5 hours for IST
+          const istDate = new Date(d.getTime() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+          if (istDate === targetDate) return true;
+        }
+      } catch {}
+    }
+    return false;
+  };
+
   // =========================================================================
   // 1. TODAY'S SPECIFIC METRICS (Starts strictly at 0% every day!)
   // =========================================================================
 
   // Today's completed tasks
   const todayCompletedTasks = tasks.filter((t) => {
-    return t.status === 'completed' && t.completedAt && t.completedAt.startsWith(todayStr);
+    return t.status === 'completed' && matchesDate(t.completedAt, todayStr);
   }).length;
 
   const todayDailyTasks = tasks.filter((t) => t.type === 'daily');
@@ -66,7 +86,7 @@ export async function GET(req: NextRequest) {
         existingSub.revisionCount += 1;
         if (rev.step === 6) hasCompletedDay60 = true;
 
-        if (rev.completedAt && rev.completedAt.startsWith(todayStr)) {
+        if (rev.completedAt && matchesDate(rev.completedAt, todayStr)) {
           todayCompletedRevisions += 1;
         }
       }
@@ -87,11 +107,7 @@ export async function GET(req: NextRequest) {
 
   // Today's study focus sessions
   const todaySessions = sessions.filter((s) => {
-    try {
-      return isSameDay(parseISO(s.completedAt), now);
-    } catch {
-      return false;
-    }
+    return matchesDate(s.completedAt, todayStr);
   });
 
   const todayFocusSeconds = todaySessions.reduce((acc, s) => acc + s.durationSeconds, 0);
@@ -131,19 +147,19 @@ export async function GET(req: NextRequest) {
     const dateStr = format(targetDate, 'yyyy-MM-dd');
     const dayName = dayNames[targetDate.getDay()];
 
-    const dayTasks = tasks.filter((t) => t.completedAt && t.completedAt.startsWith(dateStr)).length;
+    const dayTasks = tasks.filter((t) => matchesDate(t.completedAt, dateStr)).length;
 
     let dayRevisions = 0;
     topics.forEach((t) => {
       t.revisions.forEach((r) => {
-        if (r.completedAt && r.completedAt.startsWith(dateStr)) {
+        if (matchesDate(r.completedAt, dateStr)) {
           dayRevisions += 1;
         }
       });
     });
 
     const dayFocusSeconds = sessions
-      .filter((s) => s.completedAt.startsWith(dateStr))
+      .filter((s) => matchesDate(s.completedAt, dateStr))
       .reduce((acc, s) => acc + s.durationSeconds, 0);
     const dayFocusMins = Math.round(dayFocusSeconds / 60);
 
@@ -177,13 +193,13 @@ export async function GET(req: NextRequest) {
     const dateStr = format(dayDate, 'yyyy-MM-dd');
 
     // Count tasks on this day
-    const dayTasks = tasks.filter((t) => t.completedAt && t.completedAt.startsWith(dateStr)).length;
+    const dayTasks = tasks.filter((t) => matchesDate(t.completedAt, dateStr)).length;
 
     // Count revisions on this day
     let dayRevisions = 0;
     topics.forEach((t) => {
       t.revisions.forEach((r) => {
-        if (r.completedAt && r.completedAt.startsWith(dateStr)) {
+        if (matchesDate(r.completedAt, dateStr)) {
           dayRevisions += 1;
         }
       });
@@ -191,7 +207,7 @@ export async function GET(req: NextRequest) {
 
     // Count focus minutes on this day
     const dayFocusSeconds = sessions
-      .filter((s) => s.completedAt.startsWith(dateStr))
+      .filter((s) => matchesDate(s.completedAt, dateStr))
       .reduce((acc, s) => acc + s.durationSeconds, 0);
     const dayFocusMinutes = Math.round(dayFocusSeconds / 60);
 

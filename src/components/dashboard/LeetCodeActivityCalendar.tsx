@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ActivityHeatmapDay } from '@/lib/types';
 import { Calendar, Flame, Info } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface LeetCodeActivityCalendarProps {
   activityHeatmap?: ActivityHeatmapDay[];
@@ -53,7 +54,8 @@ export function LeetCodeActivityCalendar({
   const [todayStr, setTodayStr] = useState('');
 
   React.useEffect(() => {
-    setTodayStr(new Date().toISOString().split('T')[0]);
+    // Use user's local date (date-fns format uses local browser time instead of UTC toISOString)
+    setTodayStr(format(new Date(), 'yyyy-MM-dd'));
   }, []);
 
   return (

@@ -22,7 +22,9 @@ export async function PATCH(
 
   try {
     const body = await req.json();
-    const { status, subtaskId, toggleSubtask } = body;
+    const { status, subtaskId, toggleSubtask, completedAt: clientCompletedAt, clientDate } = body;
+
+    const defaultCompletedAt = clientCompletedAt || (clientDate ? `${clientDate} ${format(new Date(), 'HH:mm:ss')}` : format(new Date(), 'yyyy-MM-dd HH:mm:ss'));
 
     let updates: Record<string, unknown> = {};
 
@@ -35,12 +37,12 @@ export async function PATCH(
       updates = {
         subtasks: updatedSubtasks,
         status: allDone ? 'completed' : existing.status === 'completed' ? 'in_progress' : existing.status,
-        completedAt: allDone ? format(new Date(), 'yyyy-MM-dd HH:mm:ss') : null,
+        completedAt: allDone ? defaultCompletedAt : null,
       };
     } else if (status) {
       updates = {
         status,
-        completedAt: status === 'completed' ? format(new Date(), 'yyyy-MM-dd HH:mm:ss') : null,
+        completedAt: status === 'completed' ? (clientCompletedAt || defaultCompletedAt) : null,
       };
     } else {
       updates = body;

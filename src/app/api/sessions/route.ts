@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromRequest } from '@/lib/auth';
 import { getUserSessions, createSession } from '@/lib/db';
 import { StudySession } from '@/lib/types';
+import { format } from 'date-fns';
 
 export async function GET(req: NextRequest) {
   const session = getSessionFromRequest(req);
@@ -23,12 +24,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { subject, topicTitle, durationSeconds, type = 'pomodoro', notes = '' } = body;
+    const { subject, topicTitle, durationSeconds, type = 'pomodoro', notes = '', completedAt: clientCompletedAt, clientDate } = body;
 
     if (!durationSeconds || durationSeconds <= 0) {
       return NextResponse.json({ error: 'Valid duration is required' }, { status: 400 });
     }
 
+    const completedAtStr = clientCompletedAt || (clientDate ? `${clientDate} ${format(new Date(), 'HH:mm:ss')}` : format(new Date(), 'yyyy-MM-dd HH:mm:ss'));
     const sessionId = `ses-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const newSession: StudySession = {
       id: sessionId,
@@ -37,7 +39,7 @@ export async function POST(req: NextRequest) {
       topicTitle: topicTitle || '',
       durationSeconds: Math.round(durationSeconds),
       type: (['pomodoro', 'stopwatch', 'countdown'].includes(type) ? type : 'pomodoro') as 'pomodoro' | 'stopwatch' | 'countdown',
-      completedAt: new Date().toISOString(),
+      completedAt: completedAtStr,
       notes,
     };
 

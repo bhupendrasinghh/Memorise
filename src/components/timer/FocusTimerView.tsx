@@ -6,6 +6,7 @@ import { soundEngine } from '@/lib/audio';
 import { sendBrowserNotification } from '@/lib/notifications';
 import { useToast } from '@/context/ToastContext';
 import confetti from 'canvas-confetti';
+import { format } from 'date-fns';
 
 interface FocusTimerViewProps {
   onSessionSaved?: () => void;
@@ -58,6 +59,8 @@ export function FocusTimerView({ onSessionSaved }: FocusTimerViewProps) {
 
     if (timerType === 'pomodoro') {
       try {
+        const localNow = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+        const localDate = format(new Date(), 'yyyy-MM-dd');
         await fetch('/api/sessions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -66,6 +69,8 @@ export function FocusTimerView({ onSessionSaved }: FocusTimerViewProps) {
             durationSeconds: totalSeconds,
             type: 'pomodoro',
             notes: 'Completed Pomodoro session',
+            completedAt: localNow,
+            clientDate: localDate,
           }),
         });
         success('Focus Session Recorded!', `+${Math.round(totalSeconds / 60)} minutes added to your daily productivity score.`);
