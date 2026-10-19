@@ -5,11 +5,13 @@ import { format } from 'date-fns';
 import { ToastProvider, useToast } from '@/context/ToastContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { AlarmProvider } from '@/context/AlarmContext';
+import { StopwatchProvider } from '@/context/StopwatchContext';
 import { Navbar } from '@/components/Navbar';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileNav } from '@/components/MobileNav';
 import { AuthModal } from '@/components/AuthModal';
 import { WhatsAppModal } from '@/components/whatsapp/WhatsAppModal';
+import { FloatingStopwatchWidget } from '@/components/timer/FloatingStopwatchWidget';
 
 import { ProductivityCard } from '@/components/dashboard/ProductivityCard';
 import { DueRevisionsWidget } from '@/components/dashboard/DueRevisionsWidget';
@@ -693,6 +695,15 @@ function DashboardApp() {
         isOpen={whatsappModalOpen}
         onClose={() => setWhatsappModalOpen(false)}
       />
+
+      {/* Persistent Floating Stopwatch Mini-Bar across all tabs */}
+      <FloatingStopwatchWidget
+        onOpenTimer={() => {
+          setActiveTab('timer');
+          setTimerSubtab('stopwatch');
+        }}
+        isTimerTabActive={activeTab === 'timer' && timerSubtab === 'stopwatch'}
+      />
     </div>
   );
 }
@@ -702,7 +713,9 @@ export default function Home() {
     <ToastProvider>
       <AuthProvider>
         <AlarmProvider>
-          <DashboardApp />
+          <StopwatchProvider>
+            <DashboardApp />
+          </StopwatchProvider>
         </AlarmProvider>
       </AuthProvider>
     </ToastProvider>

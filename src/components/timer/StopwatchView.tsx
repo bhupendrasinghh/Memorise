@@ -1,71 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Flag, Save, CheckCircle2, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Pause, RotateCcw, Flag, Save, Clock, Sparkles } from 'lucide-react';
 import { soundEngine } from '@/lib/audio';
 import { useToast } from '@/context/ToastContext';
+import { useStopwatch } from '@/context/StopwatchContext';
 import { format } from 'date-fns';
-
-interface LapTime {
-  lapNumber: number;
-  timeMs: number;
-  overallMs: number;
-}
 
 export function StopwatchView({ onSessionSaved }: { onSessionSaved?: () => void }) {
   const { success } = useToast();
-  const [isRunning, setIsRunning] = useState(false);
-  const [elapsedMs, setElapsedMs] = useState(0);
-  const [laps, setLaps] = useState<LapTime[]>([]);
-  const [sessionSubject, setSessionSubject] = useState('Computer Science');
+  const {
+    isRunning,
+    elapsedMs,
+    laps,
+    sessionSubject,
+    setSessionSubject,
+    handleStart,
+    handlePause,
+    handleReset,
+    handleLap,
+    formatStopwatch,
+  } = useStopwatch();
+
   const [isSaving, setIsSaving] = useState(false);
-
-  const startTimeRef = useRef<number>(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    if (isRunning) {
-      startTimeRef.current = Date.now() - elapsedMs;
-      intervalRef.current = setInterval(() => {
-        setElapsedMs(Date.now() - startTimeRef.current);
-      }, 30);
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isRunning, elapsedMs]);
-
-  const handleStart = () => {
-    soundEngine.playTick();
-    setIsRunning(true);
-  };
-
-  const handlePause = () => {
-    soundEngine.playTick();
-    setIsRunning(false);
-  };
-
-  const handleReset = () => {
-    soundEngine.playTick();
-    setIsRunning(false);
-    setElapsedMs(0);
-    setLaps([]);
-  };
-
-  const handleLap = () => {
-    soundEngine.playTick();
-    const lastLapOverall = laps.length > 0 ? laps[0].overallMs : 0;
-    const lapDuration = elapsedMs - lastLapOverall;
-
-    const newLap: LapTime = {
-      lapNumber: laps.length + 1,
-      timeMs: lapDuration,
-      overallMs: elapsedMs,
-    };
-    setLaps([newLap, ...laps]);
-  };
 
   const handleSaveSession = async () => {
     if (elapsedMs < 10000) {
@@ -103,18 +60,6 @@ export function StopwatchView({ onSessionSaved }: { onSessionSaved?: () => void 
     }
   };
 
-  const formatStopwatch = (ms: number) => {
-    const minutes = Math.floor(ms / 60000);
-    const seconds = Math.floor((ms % 60000) / 1000);
-    const hundredths = Math.floor((ms % 1000) / 10);
-
-    return {
-      min: String(minutes).padStart(2, '0'),
-      sec: String(seconds).padStart(2, '0'),
-      ms: String(hundredths).padStart(2, '0'),
-    };
-  };
-
   const time = formatStopwatch(elapsedMs);
 
   // Determine fastest and slowest laps
@@ -129,6 +74,12 @@ export function StopwatchView({ onSessionSaved }: { onSessionSaved?: () => void 
 
   return (
     <div className="p-6 sm:p-8 rounded-3xl glass border border-slate-200/80 dark:border-slate-800/80 shadow-sm flex flex-col items-center">
+      {/* Background Active Status Pill */}
+      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/60 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 mb-5">
+        <span className={`w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+        <span>{isRunning ? 'Running in Background Active' : 'Background Wall-Clock Engine Ready'}</span>
+      </div>
+
       {/* Subject input for logging */}
       <div className="w-full max-w-xs mb-6 text-center">
         <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
