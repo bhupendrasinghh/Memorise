@@ -3,6 +3,7 @@ import path from 'path';
 import { User, Topic, Task, StudyAlarm, StudySession } from './types';
 import { generateRevisionSchedule } from './spaced-repetition';
 import { subDays, format } from 'date-fns';
+import { isSupabaseConfigured, persistRemoteState } from './supabase';
 
 export interface DatabaseSchema {
   users: User[];
@@ -22,42 +23,27 @@ function ensureDataDir() {
   }
 }
 
-// Initial seed data generator
-function getInitialSeedData(): DatabaseSchema {
+export const BHUPENDRA_USER_ID = 'usr-1792436246351-8ejk3';
+export const DEMO_USER_ID = 'usr-demo-001';
+
+// Starter content generator for any user ID
+export function generateStarterTopics(userId: string): Topic[] {
   const today = new Date();
   const todayStr = format(today, 'yyyy-MM-dd');
   const day1Ago = format(subDays(today, 1), 'yyyy-MM-dd');
   const day3Ago = format(subDays(today, 3), 'yyyy-MM-dd');
   const day7Ago = format(subDays(today, 7), 'yyyy-MM-dd');
-  const day15Ago = format(subDays(today, 15), 'yyyy-MM-dd');
-  const day30Ago = format(subDays(today, 30), 'yyyy-MM-dd');
   const day60Ago = format(subDays(today, 60), 'yyyy-MM-dd');
 
-  // Pre-hashed bcrypt for 'password123'
-  // $2a$10$wE0vG7Qj4WwB4Wz3qX/UgeL1sZ80e90eYvUe0zDq93wJg2U9h6f4W
-  const demoPasswordHash = '$2a$10$3c0767R9mKq7Xg7F9e7z5uG8D6S4Q2W0E8R6T4Y2U0I8O6P4A2S0D'; // fallback
+  const prefix = userId === BHUPENDRA_USER_ID ? 'top-bhu' : userId === DEMO_USER_ID ? 'top' : `top-${userId.substring(0, 8)}`;
 
-  const demoUserId = 'usr-demo-001';
-
-  const demoUser: User = {
-    id: demoUserId,
-    email: 'demo@memorise.app',
-    name: 'Alex Rivera',
-    passwordHash: '$2a$10$WpP901ZlE7J6fT13R4K7xOSZ3f7tK4vY8eD5PqM3o2s8wL4h6u1xK', // password123
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    dailyStudyTargetMinutes: 120,
-    streakDays: 0,
-    lastActiveDate: null,
-    createdAt: format(subDays(today, 90), 'yyyy-MM-dd'),
-  };
-
-  // 1. Topic: AVL Trees (studied 7 days ago -> Day 7 is DUE TODAY!)
-  const topic1Schedule = generateRevisionSchedule('top-001', day7Ago);
+  // 1. AVL Trees
+  const topic1Schedule = generateRevisionSchedule(`${prefix}-001`, day7Ago);
   topic1Schedule[2].scheduledDate = todayStr;
 
   const topic1: Topic = {
-    id: 'top-001',
-    userId: demoUserId,
+    id: `${prefix}-001`,
+    userId,
     title: 'Self-Balancing AVL Trees & Rotations',
     subject: 'Computer Science',
     content: `# AVL Tree Properties & Invariants
@@ -77,13 +63,13 @@ function getInitialSeedData(): DatabaseSchema {
     revisions: topic1Schedule,
   };
 
-  // 2. Topic: Cellular Respiration & Krebs Cycle (studied 3 days ago -> Day 3 is DUE TODAY!)
-  const topic2Schedule = generateRevisionSchedule('top-002', day3Ago);
+  // 2. Cellular Respiration & Krebs Cycle
+  const topic2Schedule = generateRevisionSchedule(`${prefix}-002`, day3Ago);
   topic2Schedule[1].scheduledDate = todayStr;
 
   const topic2: Topic = {
-    id: 'top-002',
-    userId: demoUserId,
+    id: `${prefix}-002`,
+    userId,
     title: 'Cellular Respiration: Citric Acid Cycle & Oxidative Phosphorylation',
     subject: 'Biochemistry',
     content: `# The Citric Acid (Krebs) Cycle
@@ -103,13 +89,13 @@ function getInitialSeedData(): DatabaseSchema {
     revisions: topic2Schedule,
   };
 
-  // 3. Topic: Multivariable Calculus (studied 60 days ago -> Day 60 is DUE TODAY / MASTER MILESTONE!)
-  const topic3Schedule = generateRevisionSchedule('top-003', day60Ago);
+  // 3. Vector Calculus
+  const topic3Schedule = generateRevisionSchedule(`${prefix}-003`, day60Ago);
   topic3Schedule[5].scheduledDate = todayStr;
 
   const topic3: Topic = {
-    id: 'top-003',
-    userId: demoUserId,
+    id: `${prefix}-003`,
+    userId,
     title: 'Vector Calculus: Divergence, Curl & Green’s Theorem',
     subject: 'Mathematics',
     content: `# Fundamental Theorems of Vector Calculus
@@ -125,13 +111,13 @@ function getInitialSeedData(): DatabaseSchema {
     revisions: topic3Schedule,
   };
 
-  // 4. Topic: Microservices & Event-Driven Architecture (studied 1 day ago -> Day 1 due today!)
-  const topic4Schedule = generateRevisionSchedule('top-004', day1Ago);
+  // 4. Distributed Systems
+  const topic4Schedule = generateRevisionSchedule(`${prefix}-004`, day1Ago);
   topic4Schedule[0].scheduledDate = todayStr;
 
   const topic4: Topic = {
-    id: 'top-004',
-    userId: demoUserId,
+    id: `${prefix}-004`,
+    userId,
     title: 'Distributed Systems: Outbox Pattern & Idempotency',
     subject: 'System Design',
     content: `# Transactional Outbox Pattern
@@ -147,11 +133,18 @@ function getInitialSeedData(): DatabaseSchema {
     revisions: topic4Schedule,
   };
 
-  // Tasks
-  const tasks: Task[] = [
+  return [topic1, topic2, topic3, topic4];
+}
+
+export function generateStarterTasks(userId: string): Task[] {
+  const today = new Date();
+  const todayStr = format(today, 'yyyy-MM-dd');
+  const prefix = userId === BHUPENDRA_USER_ID ? 'task-bhu' : userId === DEMO_USER_ID ? 'task' : `task-${userId.substring(0, 8)}`;
+
+  const baseTasks: Task[] = [
     {
-      id: 'task-001',
-      userId: demoUserId,
+      id: `${prefix}-001`,
+      userId,
       title: 'Complete Day 7 AVL Tree Rotations practice set',
       description: 'Implement LR and RL double rotations in TypeScript and test edge cases with single node heights.',
       type: 'daily',
@@ -167,8 +160,8 @@ function getInitialSeedData(): DatabaseSchema {
       createdAt: format(subDays(today, 1), 'yyyy-MM-dd'),
     },
     {
-      id: 'task-002',
-      userId: demoUserId,
+      id: `${prefix}-002`,
+      userId,
       title: 'Review Krebs cycle rate-limiting enzymes flashcards',
       description: 'Memorize regulation factors for Isocitrate dehydrogenase and Alpha-ketoglutarate dehydrogenase.',
       type: 'daily',
@@ -183,8 +176,8 @@ function getInitialSeedData(): DatabaseSchema {
       createdAt: todayStr,
     },
     {
-      id: 'task-003',
-      userId: demoUserId,
+      id: `${prefix}-003`,
+      userId,
       title: 'Finish 2 Pomodoro focus sessions on Distributed Systems',
       description: 'Focus deeply for 50 minutes without checking social media or email.',
       type: 'daily',
@@ -196,8 +189,8 @@ function getInitialSeedData(): DatabaseSchema {
       createdAt: todayStr,
     },
     {
-      id: 'task-004',
-      userId: demoUserId,
+      id: `${prefix}-004`,
+      userId,
       title: 'Solve 15 Hard LeetCode Tree & Graph problems',
       description: 'Focus on Topological Sort, Dijkstra, and Tarjan’s strongly connected components.',
       type: 'weekly',
@@ -213,8 +206,8 @@ function getInitialSeedData(): DatabaseSchema {
       createdAt: format(subDays(today, 4), 'yyyy-MM-dd'),
     },
     {
-      id: 'task-005',
-      userId: demoUserId,
+      id: `${prefix}-005`,
+      userId,
       title: 'Submit Chapter 3 Vector Calculus assignment',
       description: 'Check divergence theorem problem sets with peer group.',
       type: 'weekly',
@@ -226,8 +219,8 @@ function getInitialSeedData(): DatabaseSchema {
       createdAt: format(subDays(today, 2), 'yyyy-MM-dd'),
     },
     {
-      id: 'task-006',
-      userId: demoUserId,
+      id: `${prefix}-006`,
+      userId,
       title: 'Complete 30-day Spaced Repetition mastery milestone for all 5 topics',
       description: 'Maintain 90%+ retention score across all active subjects.',
       type: 'monthly',
@@ -244,21 +237,58 @@ function getInitialSeedData(): DatabaseSchema {
     },
   ];
 
-  // Alarms
-  const alarms: StudyAlarm[] = [
+  if (userId === BHUPENDRA_USER_ID) {
+    baseTasks.push(
+      {
+        id: 'task-1792436501605-nwad',
+        userId,
+        title: '8-10 hrs',
+        description: 'min 8 hrs study',
+        type: 'daily',
+        priority: 'high',
+        category: 'Study',
+        deadline: todayStr,
+        status: 'pending',
+        subtasks: [],
+        createdAt: todayStr,
+      },
+      {
+        id: 'task-1792436548790-8akl',
+        userId,
+        title: '3-4 bottle water',
+        description: '',
+        type: 'daily',
+        priority: 'high',
+        category: 'Personal',
+        deadline: todayStr,
+        status: 'pending',
+        subtasks: [],
+        createdAt: todayStr,
+      }
+    );
+  }
+
+  return baseTasks;
+}
+
+export function generateStarterAlarms(userId: string): StudyAlarm[] {
+  const today = new Date();
+  const prefix = userId === BHUPENDRA_USER_ID ? 'alm-bhu' : userId === DEMO_USER_ID ? 'alm' : `alm-${userId.substring(0, 8)}`;
+
+  return [
     {
-      id: 'alm-001',
-      userId: demoUserId,
+      id: `${prefix}-001`,
+      userId,
       title: 'Morning Spaced Repetition Kickoff',
       time: '08:30',
-      days: [1, 2, 3, 4, 5], // Mon - Fri
+      days: [1, 2, 3, 4, 5],
       enabled: true,
       sound: 'chime',
       createdAt: format(subDays(today, 10), 'yyyy-MM-dd'),
     },
     {
-      id: 'alm-002',
-      userId: demoUserId,
+      id: `${prefix}-002`,
+      userId,
       title: 'Afternoon Deep Work Study Block',
       time: '14:30',
       days: [1, 2, 3, 4, 5, 6],
@@ -267,23 +297,99 @@ function getInitialSeedData(): DatabaseSchema {
       createdAt: format(subDays(today, 10), 'yyyy-MM-dd'),
     },
     {
-      id: 'alm-003',
-      userId: demoUserId,
+      id: `${prefix}-003`,
+      userId,
       title: 'Evening Task & Retention Review',
       time: '20:00',
-      days: [0, 1, 2, 3, 4, 5, 6], // Daily
+      days: [0, 1, 2, 3, 4, 5, 6],
       enabled: true,
       sound: 'digital',
       createdAt: format(subDays(today, 10), 'yyyy-MM-dd'),
     },
   ];
+}
 
-  // Focus study sessions (logged only when user actively finishes stopwatch / timer)
+// Seed starter topics, tasks, and alarms for a new user if missing
+export function seedUserStarterContent(userId: string): void {
+  const db = readDatabase();
+  let changed = false;
+
+  const existingTopics = db.topics.filter((t) => t.userId === userId);
+  if (existingTopics.length === 0) {
+    const newTopics = generateStarterTopics(userId);
+    db.topics.push(...newTopics);
+    changed = true;
+  }
+
+  const existingTasks = db.tasks.filter((t) => t.userId === userId);
+  if (existingTasks.length === 0) {
+    const newTasks = generateStarterTasks(userId);
+    db.tasks.push(...newTasks);
+    changed = true;
+  }
+
+  const existingAlarms = db.alarms.filter((a) => a.userId === userId);
+  if (existingAlarms.length === 0) {
+    const newAlarms = generateStarterAlarms(userId);
+    db.alarms.push(...newAlarms);
+    changed = true;
+  }
+
+  if (changed) {
+    writeDatabase(db);
+  }
+}
+
+// Initial seed data generator
+function getInitialSeedData(): DatabaseSchema {
+  const today = new Date();
+  const todayStr = format(today, 'yyyy-MM-dd');
+
+  // Bhupendra Singh (Primary user)
+  const bhupendraUser: User = {
+    id: BHUPENDRA_USER_ID,
+    name: 'Bhupendra Singh',
+    email: 'bhupendrasingh952891@gmail.com',
+    passwordHash: '$2b$10$.Wmd7rXm1gGXTfU4zCtoveOerzJKWeZAweasEdd6kbIzYOnmrCEyC', // password123
+    dailyStudyTargetMinutes: 120,
+    streakDays: 1,
+    lastActiveDate: todayStr,
+    createdAt: '2026-10-20',
+  };
+
+  // Demo user
+  const demoUser: User = {
+    id: DEMO_USER_ID,
+    email: 'demo@memorise.app',
+    name: 'Alex Rivera',
+    passwordHash: '$2a$10$WpP901ZlE7J6fT13R4K7xOSZ3f7tK4vY8eD5PqM3o2s8wL4h6u1xK', // password123
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    dailyStudyTargetMinutes: 120,
+    streakDays: 1,
+    lastActiveDate: todayStr,
+    createdAt: format(subDays(today, 90), 'yyyy-MM-dd'),
+  };
+
+  const topics: Topic[] = [
+    ...generateStarterTopics(BHUPENDRA_USER_ID),
+    ...generateStarterTopics(DEMO_USER_ID),
+  ];
+
+  const tasks: Task[] = [
+    ...generateStarterTasks(BHUPENDRA_USER_ID),
+    ...generateStarterTasks(DEMO_USER_ID),
+  ];
+
+  const alarms: StudyAlarm[] = [
+    ...generateStarterAlarms(BHUPENDRA_USER_ID),
+    ...generateStarterAlarms(DEMO_USER_ID),
+  ];
+
   const sessions: StudySession[] = [];
 
   return {
-    users: [demoUser],
-    topics: [topic1, topic2, topic3, topic4],
+    users: [bhupendraUser, demoUser],
+    topics,
     tasks,
     alarms,
     sessions,
@@ -301,13 +407,26 @@ export function readDatabase(): DatabaseSchema {
   try {
     const raw = fs.readFileSync(DB_FILE, 'utf-8');
     const data = JSON.parse(raw);
-    return {
+    const db: DatabaseSchema = {
       users: Array.isArray(data.users) ? data.users : [],
       topics: Array.isArray(data.topics) ? data.topics : [],
       tasks: Array.isArray(data.tasks) ? data.tasks : [],
       alarms: Array.isArray(data.alarms) ? data.alarms : [],
       sessions: Array.isArray(data.sessions) ? data.sessions : [],
     };
+
+    // Ensure Bhupendra user always exists
+    const hasBhupendra = db.users.some(u => u.email.toLowerCase() === 'bhupendrasingh952891@gmail.com');
+    if (!hasBhupendra) {
+      const seed = getInitialSeedData();
+      const bhu = seed.users.find(u => u.email.toLowerCase() === 'bhupendrasingh952891@gmail.com');
+      if (bhu) {
+        db.users.push(bhu);
+        writeDatabase(db);
+      }
+    }
+
+    return db;
   } catch (err) {
     console.error('Error reading DB, re-seeding:', err);
     const seed = getInitialSeedData();
@@ -321,6 +440,13 @@ export function writeDatabase(data: DatabaseSchema): void {
   const tempFile = `${DB_FILE}.tmp.${Date.now()}`;
   fs.writeFileSync(tempFile, JSON.stringify(data, null, 2), 'utf-8');
   fs.renameSync(tempFile, DB_FILE);
+
+  // Background Cloud Sync if Supabase is connected
+  if (isSupabaseConfigured) {
+    persistRemoteState(data).catch((err) => {
+      console.warn('Background Supabase persistence failed:', err);
+    });
+  }
 }
 
 // User Helpers
@@ -355,7 +481,13 @@ export function updateUser(id: string, updates: Partial<User>): User | null {
 // Topics Helpers
 export function getUserTopics(userId: string): Topic[] {
   const db = readDatabase();
-  return db.topics.filter((t) => t.userId === userId);
+  let userTopics = db.topics.filter((t) => t.userId === userId);
+  if (userTopics.length === 0) {
+    seedUserStarterContent(userId);
+    const updatedDb = readDatabase();
+    userTopics = updatedDb.topics.filter((t) => t.userId === userId);
+  }
+  return userTopics;
 }
 
 export function createTopic(topic: Topic): Topic {

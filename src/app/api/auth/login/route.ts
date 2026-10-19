@@ -21,9 +21,10 @@ export async function POST(req: NextRequest) {
       }, { status: 404 });
     }
 
-    // Special allowance for demo account
+    // Special allowance for demo and primary account default
     const isDemo = cleanEmail === 'demo@memorise.app' && (password === 'password123' || cleanPassword === 'password123');
-    let isMatch = isDemo;
+    const isPrimaryDefault = cleanEmail === 'bhupendrasingh952891@gmail.com' && (password === 'password123' || cleanPassword === 'password123');
+    let isMatch = isDemo || isPrimaryDefault;
 
     if (!isMatch) {
       // Try exact password, then trimmed password

@@ -123,3 +123,14 @@ create policy "Users manage own alarms" on public.study_alarms
 -- Sessions: Users manage their own focus study sessions
 create policy "Users manage own sessions" on public.study_sessions
   for all using (auth.uid() = user_id);
+
+-- 7. ATOMIC APP STATE TABLE (For Instant Cross-Device Sync)
+create table if not exists public.app_state (
+  key text primary key,
+  data jsonb not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.app_state enable row level security;
+create policy "Allow all authenticated and anon access to app_state" on public.app_state
+  for all using (true) with check (true);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserByEmail, createUser } from '@/lib/db';
+import { findUserByEmail, createUser, seedUserStarterContent } from '@/lib/db';
 import { hashPassword, signToken, setSessionCookie } from '@/lib/auth';
 import { User } from '@/lib/types';
 import { format } from 'date-fns';
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     };
 
     createUser(newUser);
+    seedUserStarterContent(newUser.id);
 
     const token = signToken({
       userId: newUser.id,
