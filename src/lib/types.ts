@@ -139,6 +139,21 @@ export interface ProductivityStats {
     revisionCount: number;
     color: string;
   }[];
+
+  activityHeatmap: ActivityHeatmapDay[];
+  totalActiveDays: number;
+  maxStreak: number;
+}
+
+export interface ActivityHeatmapDay {
+  date: string; // YYYY-MM-DD
+  count: number;
+  level: 0 | 1 | 2 | 3 | 4;
+  details: {
+    tasks: number;
+    revisions: number;
+    focusMinutes: number;
+  };
 }
 
 export interface LeaderboardUser {

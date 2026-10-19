@@ -450,26 +450,26 @@
       "priority": "urgent",
       "category": "Revision",
       "deadline": "2026-10-20",
-      "status": "completed",
+      "status": "pending",
       "subtasks": [
         {
           "id": "sub-1",
           "title": "Write node height calculator function",
-          "completed": true
+          "completed": false
         },
         {
           "id": "sub-2",
           "title": "Implement rotateRight & rotateLeft",
-          "completed": true
+          "completed": false
         },
         {
           "id": "sub-3",
           "title": "Verify rebalancing on 10 random insertions",
-          "completed": true
+          "completed": false
         }
       ],
       "createdAt": "2026-10-19",
-      "completedAt": "2026-10-20 00:18:21"
+      "completedAt": null
     },
     {
       "id": "task-002",
@@ -504,10 +504,10 @@
       "priority": "medium",
       "category": "Study",
       "deadline": "2026-10-20",
-      "status": "completed",
+      "status": "pending",
       "subtasks": [],
       "createdAt": "2026-10-20",
-      "completedAt": "2026-10-20"
+      "completedAt": null
     },
     {
       "id": "task-004",
@@ -702,7 +702,7 @@
       "topicTitle": "Distributed Systems",
       "durationSeconds": 3600,
       "type": "stopwatch",
-      "completedAt": "2026-10-20 00:15:29"
+      "completedAt": "2026-10-19 22:30:00"
     },
     {
       "id": "ses-004",

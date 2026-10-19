@@ -14,6 +14,7 @@ import { DueRevisionsWidget } from '@/components/dashboard/DueRevisionsWidget';
 import { DailyTasksWidget } from '@/components/dashboard/DailyTasksWidget';
 import { PerformanceCharts } from '@/components/dashboard/PerformanceCharts';
 import { SubjectBreakdownCard } from '@/components/dashboard/SubjectBreakdownCard';
+import { LeetCodeActivityCalendar } from '@/components/dashboard/LeetCodeActivityCalendar';
 
 import { TopicModal } from '@/components/revisions/TopicModal';
 import { RevisionReviewModal } from '@/components/revisions/RevisionReviewModal';
@@ -304,6 +305,13 @@ function DashboardApp() {
                   <SubjectBreakdownCard stats={stats} />
                 </div>
               </div>
+
+              {/* LeetCode Dark Daily Activity Heatmap */}
+              <LeetCodeActivityCalendar
+                activityHeatmap={stats?.activityHeatmap}
+                totalActiveDays={stats?.totalActiveDays}
+                maxStreak={stats?.maxStreak}
+              />
             </div>
           )}
 

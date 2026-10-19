@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromRequest } from '@/lib/auth';
 import { getUserTasks, getUserTopics, getUserSessions, findUserById } from '@/lib/db';
 import { getCalculatedRevisionStatus } from '@/lib/spaced-repetition';
-import { ProductivityStats } from '@/lib/types';
-import { format, subDays, startOfDay, parseISO, isSameDay } from 'date-fns';
+import { ProductivityStats, ActivityHeatmapDay } from '@/lib/types';
+import { format, subDays, parseISO, isSameDay } from 'date-fns';
 
 export async function GET(req: NextRequest) {
   const session = getSessionFromRequest(req);
@@ -20,27 +20,31 @@ export async function GET(req: NextRequest) {
   const todayStr = format(now, 'yyyy-MM-dd');
   const targetFocusMinutes = user?.dailyStudyTargetMinutes || 120;
 
-  // 1. Task Metrics
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter((t) => t.status === 'completed').length;
-  const taskCompletionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
+  // =========================================================================
+  // 1. TODAY'S SPECIFIC METRICS (Starts strictly at 0% every day!)
+  // =========================================================================
 
-  // Daily Tasks specific
-  const dailyTasks = tasks.filter((t) => t.type === 'daily');
-  const dailyCompleted = dailyTasks.filter((t) => t.status === 'completed').length;
-  const dailyTaskRate = dailyTasks.length > 0 ? (dailyCompleted / dailyTasks.length) * 100 : 100;
+  // Today's completed tasks
+  const todayCompletedTasks = tasks.filter((t) => {
+    return t.status === 'completed' && t.completedAt && t.completedAt.startsWith(todayStr);
+  }).length;
 
-  // 2. Revision Metrics
+  const todayDailyTasks = tasks.filter((t) => t.type === 'daily');
+  const totalDailyTasksCount = todayDailyTasks.length;
+  const todayDailyTaskRate =
+    totalDailyTasksCount > 0 ? (todayCompletedTasks / totalDailyTasksCount) * 100 : 0;
+
+  // Today's revisions
   let dueRevisionsCount = 0;
   let overdueRevisionsCount = 0;
-  let completedRevisionsCount = 0;
+  let todayCompletedRevisions = 0;
+  let allTimeCompletedRevisions = 0;
   let totalRevisionsCount = 0;
   let masteredTopicsCount = 0;
 
   const subjectMap = new Map<string, { topicCount: number; revisionCount: number }>();
 
   topics.forEach((topic) => {
-    // Subject mapping
     const existingSub = subjectMap.get(topic.subject) || { topicCount: 0, revisionCount: 0 };
     existingSub.topicCount += 1;
 
@@ -49,12 +53,18 @@ export async function GET(req: NextRequest) {
     topic.revisions.forEach((rev) => {
       totalRevisionsCount += 1;
       const status = getCalculatedRevisionStatus(rev, now);
+
       if (status === 'due') dueRevisionsCount += 1;
       else if (status === 'overdue') overdueRevisionsCount += 1;
-      else if (rev.status === 'completed') {
-        completedRevisionsCount += 1;
+
+      if (rev.status === 'completed') {
+        allTimeCompletedRevisions += 1;
         existingSub.revisionCount += 1;
         if (rev.step === 6) hasCompletedDay60 = true;
+
+        if (rev.completedAt && rev.completedAt.startsWith(todayStr)) {
+          todayCompletedRevisions += 1;
+        }
       }
     });
 
@@ -65,13 +75,13 @@ export async function GET(req: NextRequest) {
     subjectMap.set(topic.subject, existingSub);
   });
 
-  const totalActionableRevisions = dueRevisionsCount + overdueRevisionsCount + completedRevisionsCount;
-  const revisionCompletionRate =
-    totalActionableRevisions > 0
-      ? Math.round((completedRevisionsCount / totalActionableRevisions) * 100)
-      : 100;
+  const totalActionableTodayRevisions = dueRevisionsCount + todayCompletedRevisions;
+  const todayRevisionRate =
+    totalActionableTodayRevisions > 0
+      ? (todayCompletedRevisions / totalActionableTodayRevisions) * 100
+      : 0;
 
-  // 3. Focus Session Metrics
+  // Today's study focus sessions
   const todaySessions = sessions.filter((s) => {
     try {
       return isSameDay(parseISO(s.completedAt), now);
@@ -84,15 +94,31 @@ export async function GET(req: NextRequest) {
   const todayFocusMinutes = Math.round(todayFocusSeconds / 60);
   const focusGoalRate = Math.min(100, Math.round((todayFocusMinutes / targetFocusMinutes) * 100));
 
-  // 4. Overall Productivity Score
-  // Weighted: 40% Revisions + 40% Daily Tasks + 20% Focus Goal
-  const weightedScore =
-    revisionCompletionRate * 0.4 +
-    dailyTaskRate * 0.4 +
-    focusGoalRate * 0.2;
-  const productivityScore = Math.max(0, Math.min(100, Math.round(weightedScore)));
+  // =========================================================================
+  // OVERALL TODAY PRODUCTIVITY SCORE:
+  // Starts at 0% from the start of the day!
+  // Increases as revisions, tasks, and focus minutes are completed today.
+  // =========================================================================
+  let productivityScore = 0;
+  if (todayCompletedRevisions === 0 && todayCompletedTasks === 0 && todayFocusMinutes === 0) {
+    productivityScore = 0;
+  } else {
+    const weighted =
+      todayRevisionRate * 0.4 +
+      todayDailyTaskRate * 0.4 +
+      focusGoalRate * 0.2;
+    productivityScore = Math.max(0, Math.min(100, Math.round(weighted)));
+  }
 
-  // 5. Weekly Trend Data (Past 7 Days)
+  // Task completion rates for general dashboard display
+  const allCompletedTasks = tasks.filter((t) => t.status === 'completed').length;
+  const taskCompletionRate = tasks.length > 0 ? Math.round((allCompletedTasks / tasks.length) * 100) : 0;
+  const revisionCompletionRate =
+    totalRevisionsCount > 0 ? Math.round((allTimeCompletedRevisions / totalRevisionsCount) * 100) : 0;
+
+  // =========================================================================
+  // 2. 7-DAY PRODUCTIVITY TREND
+  // =========================================================================
   const weeklyData = [];
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -101,10 +127,8 @@ export async function GET(req: NextRequest) {
     const dateStr = format(targetDate, 'yyyy-MM-dd');
     const dayName = dayNames[targetDate.getDay()];
 
-    // Tasks completed on target date
     const dayTasks = tasks.filter((t) => t.completedAt && t.completedAt.startsWith(dateStr)).length;
 
-    // Revisions completed on target date
     let dayRevisions = 0;
     topics.forEach((t) => {
       t.revisions.forEach((r) => {
@@ -114,17 +138,15 @@ export async function GET(req: NextRequest) {
       });
     });
 
-    // Focus minutes on target date
     const dayFocusSeconds = sessions
       .filter((s) => s.completedAt.startsWith(dateStr))
       .reduce((acc, s) => acc + s.durationSeconds, 0);
     const dayFocusMins = Math.round(dayFocusSeconds / 60);
 
-    // Score estimation for that day
-    const dayScore = Math.min(
-      100,
-      Math.round((dayTasks * 20) + (dayRevisions * 25) + Math.min(50, dayFocusMins))
-    );
+    const dayScore =
+      i === 0
+        ? productivityScore // Today is strictly productivityScore (starts at 0%)
+        : Math.min(100, Math.round(dayTasks * 25 + dayRevisions * 25 + Math.min(50, dayFocusMins)));
 
     weeklyData.push({
       day: dayName,
@@ -132,11 +154,76 @@ export async function GET(req: NextRequest) {
       tasksCompleted: dayTasks,
       revisionsCompleted: dayRevisions,
       focusMinutes: dayFocusMins,
-      score: dayScore > 0 ? dayScore : (i === 0 ? productivityScore : 45 + ((targetDate.getDate() * 7) % 50)),
+      score: dayScore,
     });
   }
 
-  // Subject breakdown formatting with vibrant palette
+  // =========================================================================
+  // 3. LEETCODE DARK DAILY ACTIVE HEATMAP CALENDAR (Past 365 Days)
+  // Only active days are highlighted; inactive/other days are dark blank squares!
+  // =========================================================================
+  const activityHeatmap: ActivityHeatmapDay[] = [];
+  const daysToTrack = 364; // 52 weeks * 7 days
+  let totalActiveDays = 0;
+  let maxStreak = 0;
+  let currentStreakCounter = 0;
+
+  for (let i = daysToTrack - 1; i >= 0; i--) {
+    const dayDate = subDays(now, i);
+    const dateStr = format(dayDate, 'yyyy-MM-dd');
+
+    // Count tasks on this day
+    const dayTasks = tasks.filter((t) => t.completedAt && t.completedAt.startsWith(dateStr)).length;
+
+    // Count revisions on this day
+    let dayRevisions = 0;
+    topics.forEach((t) => {
+      t.revisions.forEach((r) => {
+        if (r.completedAt && r.completedAt.startsWith(dateStr)) {
+          dayRevisions += 1;
+        }
+      });
+    });
+
+    // Count focus minutes on this day
+    const dayFocusSeconds = sessions
+      .filter((s) => s.completedAt.startsWith(dateStr))
+      .reduce((acc, s) => acc + s.durationSeconds, 0);
+    const dayFocusMinutes = Math.round(dayFocusSeconds / 60);
+
+    // Activity sum
+    const totalActivity = dayTasks + dayRevisions + (dayFocusMinutes > 0 ? 1 : 0);
+
+    let level: 0 | 1 | 2 | 3 | 4 = 0;
+    if (totalActivity === 0) {
+      level = 0; // Blank dark square
+      currentStreakCounter = 0;
+    } else {
+      totalActiveDays += 1;
+      currentStreakCounter += 1;
+      if (currentStreakCounter > maxStreak) {
+        maxStreak = currentStreakCounter;
+      }
+
+      if (totalActivity === 1) level = 1;
+      else if (totalActivity === 2) level = 2;
+      else if (totalActivity === 3 || totalActivity === 4) level = 3;
+      else level = 4;
+    }
+
+    activityHeatmap.push({
+      date: dateStr,
+      count: totalActivity,
+      level,
+      details: {
+        tasks: dayTasks,
+        revisions: dayRevisions,
+        focusMinutes: dayFocusMinutes,
+      },
+    });
+  }
+
+  // Subject breakdown formatting
   const subjectColors = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
   let colorIdx = 0;
   const subjectBreakdown = Array.from(subjectMap.entries()).map(([subject, data]) => {
@@ -152,10 +239,10 @@ export async function GET(req: NextRequest) {
 
   const responseStats: ProductivityStats = {
     productivityScore,
-    completedTasksCount: completedTasks,
-    totalTasksCount: totalTasks,
+    completedTasksCount: allCompletedTasks,
+    totalTasksCount: tasks.length,
     taskCompletionRate,
-    completedRevisionsCount,
+    completedRevisionsCount: allTimeCompletedRevisions,
     dueRevisionsCount,
     overdueRevisionsCount,
     revisionCompletionRate,
@@ -167,6 +254,9 @@ export async function GET(req: NextRequest) {
     masteredTopicsCount,
     weeklyData,
     subjectBreakdown,
+    activityHeatmap,
+    totalActiveDays,
+    maxStreak: Math.max(maxStreak, user?.streakDays || 1),
   };
 
   return NextResponse.json({ stats: responseStats });

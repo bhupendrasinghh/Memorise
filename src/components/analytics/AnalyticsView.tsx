@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ProductivityStats, StudySession } from '@/lib/types';
 import { PerformanceCharts } from '../dashboard/PerformanceCharts';
 import { SubjectBreakdownCard } from '../dashboard/SubjectBreakdownCard';
+import { LeetCodeActivityCalendar } from '../dashboard/LeetCodeActivityCalendar';
 import { Flame, Clock, Award, CheckCircle, RotateCcw, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 
@@ -107,6 +108,13 @@ export function AnalyticsView({ stats, onRefresh }: AnalyticsViewProps) {
 
       {/* Subject Mastery and Breakdown */}
       <SubjectBreakdownCard stats={stats} />
+
+      {/* LeetCode Dark Daily Activity Heatmap */}
+      <LeetCodeActivityCalendar
+        activityHeatmap={stats?.activityHeatmap}
+        totalActiveDays={stats?.totalActiveDays}
+        maxStreak={stats?.maxStreak}
+      />
 
       {/* Focus Study Sessions Log Table */}
       <div className="p-6 rounded-3xl glass border border-slate-200/80 dark:border-slate-800/80 shadow-sm">

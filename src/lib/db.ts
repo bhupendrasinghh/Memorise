@@ -203,10 +203,9 @@ function getInitialSeedData(): DatabaseSchema {
       priority: 'medium',
       category: 'Study',
       deadline: todayStr,
-      status: 'completed',
+      status: 'pending',
       subtasks: [],
       createdAt: todayStr,
-      completedAt: todayStr,
     },
     {
       id: 'task-004',
@@ -318,7 +317,7 @@ function getInitialSeedData(): DatabaseSchema {
       topicTitle: 'Distributed Systems',
       durationSeconds: 3600, // 60 mins
       type: 'stopwatch',
-      completedAt: format(today, 'yyyy-MM-dd HH:mm:ss'),
+      completedAt: format(subDays(today, 1), 'yyyy-MM-dd 22:30:00'),
     },
     {
       id: 'ses-004',
