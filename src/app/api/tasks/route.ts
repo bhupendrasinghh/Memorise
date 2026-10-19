@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const categoryFilter = searchParams.get('category');
   const priorityFilter = searchParams.get('priority');
 
-  let tasks = getUserTasks(session.userId);
+  let tasks = getUserTasks(session.userId, session.email);
 
   if (typeFilter) {
     tasks = tasks.filter((t) => t.type === typeFilter);
@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
     const newTask: Task = {
       id: taskId,
       userId: session.userId,
+      userEmail: session.email ? session.email.toLowerCase() : undefined,
       title: title.trim(),
       description: description.trim(),
       type: (['daily', 'weekly', 'monthly'].includes(type) ? type : 'daily') as TaskType,

@@ -4,6 +4,12 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { UserPublicProfile } from '@/lib/types';
 import { useToast } from './ToastContext';
 
+export function getAuthHeaders(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  const token = localStorage.getItem('memorise_auth_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 interface AuthContextType {
   user: UserPublicProfile | null;
   loading: boolean;
@@ -24,14 +30,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const headers = getAuthHeaders();
+      const res = await fetch('/api/auth/me', { headers });
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
+        if (typeof window !== 'undefined' && data.user) {
+          localStorage.setItem('memorise_user_profile', JSON.stringify(data.user));
+        }
       } else {
+        // Fallback to cached profile if available
+        if (typeof window !== 'undefined') {
+          const cached = localStorage.getItem('memorise_user_profile');
+          if (cached) {
+            try {
+              setUser(JSON.parse(cached));
+              return;
+            } catch {}
+          }
+        }
         setUser(null);
       }
     } catch {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('memorise_user_profile');
+        if (cached) {
+          try {
+            setUser(JSON.parse(cached));
+            return;
+          } catch {}
+        }
+      }
       setUser(null);
     } finally {
       setLoading(false);
@@ -54,6 +83,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) {
         error('Login failed', data.error || 'Please check your credentials');
         return false;
+      }
+
+      if (data.token && typeof window !== 'undefined') {
+        localStorage.setItem('memorise_auth_token', data.token);
+      }
+      if (data.user && typeof window !== 'undefined') {
+        localStorage.setItem('memorise_user_profile', JSON.stringify(data.user));
       }
 
       setUser(data.user);
@@ -79,6 +115,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
+      if (data.token && typeof window !== 'undefined') {
+        localStorage.setItem('memorise_auth_token', data.token);
+      }
+      if (data.user && typeof window !== 'undefined') {
+        localStorage.setItem('memorise_user_profile', JSON.stringify(data.user));
+      }
+
       setUser(data.user);
       success(`Account created!`, `Welcome to Memorise, ${data.user.name}`);
       return true;
@@ -102,6 +145,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
+      if (data.token && typeof window !== 'undefined') {
+        localStorage.setItem('memorise_auth_token', data.token);
+      }
+      if (data.user && typeof window !== 'undefined') {
+        localStorage.setItem('memorise_user_profile', JSON.stringify(data.user));
+      }
+
       setUser(data.user);
       success('Password Updated!', `You are now logged in as ${data.user.name}`);
       return true;
@@ -113,11 +163,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setUser(null);
-      info('Logged out', 'You have been signed out successfully');
+      await fetch('/api/auth/logout', { method: 'POST', headers: getAuthHeaders() });
     } catch (err) {
       console.error('Logout error:', err);
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('memorise_auth_token');
+        localStorage.removeItem('memorise_user_profile');
+      }
+      setUser(null);
+      info('Logged out', 'You have been signed out successfully');
     }
   };
 
@@ -139,3 +194,4 @@ export function useAuth() {
   }
   return context;
 }
+

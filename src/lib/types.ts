@@ -15,6 +15,7 @@ export interface Subtask {
 export interface Task {
   id: string;
   userId: string;
+  userEmail?: string;
   title: string;
   description?: string;
   type: TaskType;
@@ -48,6 +49,7 @@ export interface RevisionScheduleItem {
 export interface Topic {
   id: string;
   userId: string;
+  userEmail?: string;
   title: string;
   subject: string;
   content: string; // Detailed notes / summary
@@ -63,6 +65,7 @@ export interface Topic {
 export interface StudyAlarm {
   id: string;
   userId: string;
+  userEmail?: string;
   title: string;
   time: string; // HH:mm format (24-hour)
   days: number[]; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday (empty array = once)
@@ -74,6 +77,7 @@ export interface StudyAlarm {
 export interface StudySession {
   id: string;
   userId: string;
+  userEmail?: string;
   subject?: string;
   topicTitle?: string;
   durationSeconds: number;

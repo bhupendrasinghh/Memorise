@@ -6,6 +6,7 @@ import { Repeat, Calendar, CheckCircle, ArrowRight, AlertCircle } from 'lucide-r
 import confetti from 'canvas-confetti';
 import { soundEngine } from '@/lib/audio';
 import { useToast } from '@/context/ToastContext';
+import { getAuthHeaders } from '@/context/AuthContext';
 
 interface DueRevisionsWidgetProps {
   dueRevisions: EnrichedRevisionItem[];
@@ -30,7 +31,7 @@ export function DueRevisionsWidget({
     try {
       const res = await fetch(`/api/revisions/${rev.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ rating: 'good', status: 'completed' }),
       });
 

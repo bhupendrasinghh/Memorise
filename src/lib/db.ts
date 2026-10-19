@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { User, Topic, Task, StudyAlarm, StudySession } from './types';
 import { generateRevisionSchedule } from './spaced-repetition';
 import { subDays, format } from 'date-fns';
@@ -28,6 +29,23 @@ function ensureDataDir() {
 
 export const BHUPENDRA_USER_ID = 'usr-1792436246351-8ejk3';
 export const DEMO_USER_ID = 'usr-demo-001';
+
+/**
+ * Returns a stable, 100% deterministic userId based on email.
+ * Guarantees that logging in from any device or container yields the exact same userId.
+ */
+export function getDeterministicUserId(email: string): string {
+  if (!email) return `usr-${Date.now()}`;
+  const clean = email.trim().toLowerCase();
+  if (clean === 'bhupendrasingh952891@gmail.com') {
+    return BHUPENDRA_USER_ID;
+  }
+  if (clean === 'demo@memorise.app') {
+    return DEMO_USER_ID;
+  }
+  const hash = crypto.createHash('sha256').update(clean).digest('hex').substring(0, 16);
+  return `usr-${hash}`;
+}
 
 // Starter content generator for any user ID
 export function generateStarterTopics(userId: string): Topic[] {
@@ -333,6 +351,7 @@ function getInitialSeedData(): DatabaseSchema {
     {
       id: 'task-1792436501605-nwad',
       userId: BHUPENDRA_USER_ID,
+      userEmail: 'bhupendrasingh952891@gmail.com',
       title: '8-10 hrs',
       description: 'min 8 hrs study',
       type: 'daily',
@@ -346,6 +365,7 @@ function getInitialSeedData(): DatabaseSchema {
     {
       id: 'task-1792436548790-8akl',
       userId: BHUPENDRA_USER_ID,
+      userEmail: 'bhupendrasingh952891@gmail.com',
       title: '3-4 bottle water',
       description: '',
       type: 'daily',
@@ -428,6 +448,23 @@ export function readDatabase(): DatabaseSchema {
       }
     }
 
+    // Auto-backfill userEmail to all entities for resilient multi-device lookup
+    db.users.forEach((u) => {
+      const email = u.email.trim().toLowerCase();
+      db.tasks.forEach((t) => {
+        if (t.userId === u.id && !t.userEmail) t.userEmail = email;
+      });
+      db.topics.forEach((top) => {
+        if (top.userId === u.id && !top.userEmail) top.userEmail = email;
+      });
+      db.alarms.forEach((alm) => {
+        if (alm.userId === u.id && !alm.userEmail) alm.userEmail = email;
+      });
+      db.sessions.forEach((ses) => {
+        if (ses.userId === u.id && !ses.userEmail) ses.userEmail = email;
+      });
+    });
+
     memoryDb = db;
     return db;
   } catch (err) {
@@ -491,31 +528,64 @@ export function updateUser(id: string, updates: Partial<User>): User | null {
 }
 
 // Topics Helpers
-export function getUserTopics(userId: string): Topic[] {
+export function getUserTopics(userId: string, userEmail?: string): Topic[] {
   const db = readDatabase();
-  return db.topics.filter((t) => t.userId === userId);
+  const cleanEmail = userEmail?.trim().toLowerCase();
+
+  return db.topics.filter((t) => {
+    if (t.userId === userId) return true;
+    if (cleanEmail && t.userEmail && t.userEmail.trim().toLowerCase() === cleanEmail) {
+      t.userId = userId;
+      return true;
+    }
+    if (cleanEmail) {
+      const owner = db.users.find((u) => u.id === t.userId);
+      if (owner && owner.email.trim().toLowerCase() === cleanEmail) {
+        t.userId = userId;
+        t.userEmail = cleanEmail;
+        return true;
+      }
+    }
+    return false;
+  });
 }
 
 export function createTopic(topic: Topic): Topic {
   const db = readDatabase();
+  if (!topic.userEmail && topic.userId) {
+    const owner = db.users.find((u) => u.id === topic.userId);
+    if (owner) topic.userEmail = owner.email.trim().toLowerCase();
+  }
   db.topics.push(topic);
   writeDatabase(db);
   return topic;
 }
 
-export function updateTopic(id: string, userId: string, updates: Partial<Topic>): Topic | null {
+export function updateTopic(id: string, userId: string, updates: Partial<Topic>, userEmail?: string): Topic | null {
   const db = readDatabase();
-  const idx = db.topics.findIndex((t) => t.id === id && t.userId === userId);
+  const cleanEmail = userEmail?.trim().toLowerCase();
+  const idx = db.topics.findIndex((t) => {
+    if (t.id !== id) return false;
+    if (t.userId === userId) return true;
+    if (cleanEmail && t.userEmail && t.userEmail.trim().toLowerCase() === cleanEmail) return true;
+    return false;
+  });
   if (idx === -1) return null;
-  db.topics[idx] = { ...db.topics[idx], ...updates, updatedAt: new Date().toISOString() };
+  db.topics[idx] = { ...db.topics[idx], ...updates, userId, updatedAt: new Date().toISOString() };
   writeDatabase(db);
   return db.topics[idx];
 }
 
-export function deleteTopic(id: string, userId: string): boolean {
+export function deleteTopic(id: string, userId: string, userEmail?: string): boolean {
   const db = readDatabase();
+  const cleanEmail = userEmail?.trim().toLowerCase();
   const initialLen = db.topics.length;
-  db.topics = db.topics.filter((t) => !(t.id === id && t.userId === userId));
+  db.topics = db.topics.filter((t) => {
+    if (t.id !== id) return true;
+    if (t.userId === userId) return false;
+    if (cleanEmail && t.userEmail && t.userEmail.trim().toLowerCase() === cleanEmail) return false;
+    return true;
+  });
   if (db.topics.length !== initialLen) {
     writeDatabase(db);
     return true;
@@ -524,31 +594,64 @@ export function deleteTopic(id: string, userId: string): boolean {
 }
 
 // Task Helpers
-export function getUserTasks(userId: string): Task[] {
+export function getUserTasks(userId: string, userEmail?: string): Task[] {
   const db = readDatabase();
-  return db.tasks.filter((t) => t.userId === userId);
+  const cleanEmail = userEmail?.trim().toLowerCase();
+
+  return db.tasks.filter((t) => {
+    if (t.userId === userId) return true;
+    if (cleanEmail && t.userEmail && t.userEmail.trim().toLowerCase() === cleanEmail) {
+      t.userId = userId;
+      return true;
+    }
+    if (cleanEmail) {
+      const owner = db.users.find((u) => u.id === t.userId);
+      if (owner && owner.email.trim().toLowerCase() === cleanEmail) {
+        t.userId = userId;
+        t.userEmail = cleanEmail;
+        return true;
+      }
+    }
+    return false;
+  });
 }
 
 export function createTask(task: Task): Task {
   const db = readDatabase();
+  if (!task.userEmail && task.userId) {
+    const owner = db.users.find((u) => u.id === task.userId);
+    if (owner) task.userEmail = owner.email.trim().toLowerCase();
+  }
   db.tasks.push(task);
   writeDatabase(db);
   return task;
 }
 
-export function updateTask(id: string, userId: string, updates: Partial<Task>): Task | null {
+export function updateTask(id: string, userId: string, updates: Partial<Task>, userEmail?: string): Task | null {
   const db = readDatabase();
-  const idx = db.tasks.findIndex((t) => t.id === id && t.userId === userId);
+  const cleanEmail = userEmail?.trim().toLowerCase();
+  const idx = db.tasks.findIndex((t) => {
+    if (t.id !== id) return false;
+    if (t.userId === userId) return true;
+    if (cleanEmail && t.userEmail && t.userEmail.trim().toLowerCase() === cleanEmail) return true;
+    return false;
+  });
   if (idx === -1) return null;
-  db.tasks[idx] = { ...db.tasks[idx], ...updates };
+  db.tasks[idx] = { ...db.tasks[idx], ...updates, userId };
   writeDatabase(db);
   return db.tasks[idx];
 }
 
-export function deleteTask(id: string, userId: string): boolean {
+export function deleteTask(id: string, userId: string, userEmail?: string): boolean {
   const db = readDatabase();
+  const cleanEmail = userEmail?.trim().toLowerCase();
   const initialLen = db.tasks.length;
-  db.tasks = db.tasks.filter((t) => !(t.id === id && t.userId === userId));
+  db.tasks = db.tasks.filter((t) => {
+    if (t.id !== id) return true;
+    if (t.userId === userId) return false;
+    if (cleanEmail && t.userEmail && t.userEmail.trim().toLowerCase() === cleanEmail) return false;
+    return true;
+  });
   if (db.tasks.length !== initialLen) {
     writeDatabase(db);
     return true;
@@ -557,31 +660,64 @@ export function deleteTask(id: string, userId: string): boolean {
 }
 
 // Alarm Helpers
-export function getUserAlarms(userId: string): StudyAlarm[] {
+export function getUserAlarms(userId: string, userEmail?: string): StudyAlarm[] {
   const db = readDatabase();
-  return db.alarms.filter((a) => a.userId === userId);
+  const cleanEmail = userEmail?.trim().toLowerCase();
+
+  return db.alarms.filter((a) => {
+    if (a.userId === userId) return true;
+    if (cleanEmail && a.userEmail && a.userEmail.trim().toLowerCase() === cleanEmail) {
+      a.userId = userId;
+      return true;
+    }
+    if (cleanEmail) {
+      const owner = db.users.find((u) => u.id === a.userId);
+      if (owner && owner.email.trim().toLowerCase() === cleanEmail) {
+        a.userId = userId;
+        a.userEmail = cleanEmail;
+        return true;
+      }
+    }
+    return false;
+  });
 }
 
 export function createAlarm(alarm: StudyAlarm): StudyAlarm {
   const db = readDatabase();
+  if (!alarm.userEmail && alarm.userId) {
+    const owner = db.users.find((u) => u.id === alarm.userId);
+    if (owner) alarm.userEmail = owner.email.trim().toLowerCase();
+  }
   db.alarms.push(alarm);
   writeDatabase(db);
   return alarm;
 }
 
-export function updateAlarm(id: string, userId: string, updates: Partial<StudyAlarm>): StudyAlarm | null {
+export function updateAlarm(id: string, userId: string, updates: Partial<StudyAlarm>, userEmail?: string): StudyAlarm | null {
   const db = readDatabase();
-  const idx = db.alarms.findIndex((a) => a.id === id && a.userId === userId);
+  const cleanEmail = userEmail?.trim().toLowerCase();
+  const idx = db.alarms.findIndex((a) => {
+    if (a.id !== id) return false;
+    if (a.userId === userId) return true;
+    if (cleanEmail && a.userEmail && a.userEmail.trim().toLowerCase() === cleanEmail) return true;
+    return false;
+  });
   if (idx === -1) return null;
-  db.alarms[idx] = { ...db.alarms[idx], ...updates };
+  db.alarms[idx] = { ...db.alarms[idx], ...updates, userId };
   writeDatabase(db);
   return db.alarms[idx];
 }
 
-export function deleteAlarm(id: string, userId: string): boolean {
+export function deleteAlarm(id: string, userId: string, userEmail?: string): boolean {
   const db = readDatabase();
+  const cleanEmail = userEmail?.trim().toLowerCase();
   const initialLen = db.alarms.length;
-  db.alarms = db.alarms.filter((a) => !(a.id === id && a.userId === userId));
+  db.alarms = db.alarms.filter((a) => {
+    if (a.id !== id) return true;
+    if (a.userId === userId) return false;
+    if (cleanEmail && a.userEmail && a.userEmail.trim().toLowerCase() === cleanEmail) return false;
+    return true;
+  });
   if (db.alarms.length !== initialLen) {
     writeDatabase(db);
     return true;
@@ -590,13 +726,34 @@ export function deleteAlarm(id: string, userId: string): boolean {
 }
 
 // Sessions Helpers
-export function getUserSessions(userId: string): StudySession[] {
+export function getUserSessions(userId: string, userEmail?: string): StudySession[] {
   const db = readDatabase();
-  return db.sessions.filter((s) => s.userId === userId);
+  const cleanEmail = userEmail?.trim().toLowerCase();
+
+  return db.sessions.filter((s) => {
+    if (s.userId === userId) return true;
+    if (cleanEmail && s.userEmail && s.userEmail.trim().toLowerCase() === cleanEmail) {
+      s.userId = userId;
+      return true;
+    }
+    if (cleanEmail) {
+      const owner = db.users.find((u) => u.id === s.userId);
+      if (owner && owner.email.trim().toLowerCase() === cleanEmail) {
+        s.userId = userId;
+        s.userEmail = cleanEmail;
+        return true;
+      }
+    }
+    return false;
+  });
 }
 
 export function createSession(session: StudySession): StudySession {
   const db = readDatabase();
+  if (!session.userEmail && session.userId) {
+    const owner = db.users.find((u) => u.id === session.userId);
+    if (owner) session.userEmail = owner.email.trim().toLowerCase();
+  }
   db.sessions.push(session);
   writeDatabase(db);
   return session;

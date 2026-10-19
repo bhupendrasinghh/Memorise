@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { StudyAlarm } from '@/lib/types';
 import { soundEngine } from '@/lib/audio';
 import { sendBrowserNotification } from '@/lib/notifications';
-import { useAuth } from './AuthContext';
+import { useAuth, getAuthHeaders } from './AuthContext';
 import { Bell, Volume2, X } from 'lucide-react';
 
 interface AlarmContextType {
@@ -27,7 +27,7 @@ export function AlarmProvider({ children }: { children: ReactNode }) {
   const reloadAlarms = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await fetch('/api/alarms');
+      const res = await fetch('/api/alarms', { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         setAlarms(data.alarms || []);

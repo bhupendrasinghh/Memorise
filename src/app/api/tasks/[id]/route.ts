@@ -13,7 +13,7 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const tasks = getUserTasks(session.userId);
+  const tasks = getUserTasks(session.userId, session.email);
   const existing = tasks.find((t) => t.id === id);
 
   if (!existing) {
@@ -48,7 +48,7 @@ export async function PATCH(
       updates = body;
     }
 
-    const updated = updateTask(id, session.userId, updates);
+    const updated = updateTask(id, session.userId, updates, session.email);
     return NextResponse.json({ task: updated });
   } catch (err) {
     console.error('Error patching task:', err);
@@ -68,7 +68,7 @@ export async function PUT(
   const { id } = await params;
   try {
     const body = await req.json();
-    const updated = updateTask(id, session.userId, body);
+    const updated = updateTask(id, session.userId, body, session.email);
 
     if (!updated) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
@@ -91,7 +91,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const deleted = deleteTask(id, session.userId);
+  const deleted = deleteTask(id, session.userId, session.email);
 
   if (!deleted) {
     return NextResponse.json({ error: 'Task not found' }, { status: 404 });

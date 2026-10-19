@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromRequest } from '@/lib/auth';
-import { getUserTasks, getUserTopics, getUserSessions, findUserById } from '@/lib/db';
+import { getUserTasks, getUserTopics, getUserSessions, findUserById, findUserByEmail } from '@/lib/db';
 import { getCalculatedRevisionStatus } from '@/lib/spaced-repetition';
 import { ProductivityStats, ActivityHeatmapDay } from '@/lib/types';
 import { format, subDays, parseISO, isSameDay } from 'date-fns';
@@ -11,10 +11,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const user = findUserById(session.userId);
-  const tasks = getUserTasks(session.userId);
-  const topics = getUserTopics(session.userId);
-  const sessions = getUserSessions(session.userId);
+  const user = findUserById(session.userId) || (session.email ? findUserByEmail(session.email) : undefined);
+  const tasks = getUserTasks(session.userId, session.email);
+  const topics = getUserTopics(session.userId, session.email);
+  const sessions = getUserSessions(session.userId, session.email);
 
   const clientDate = req.nextUrl.searchParams.get('date');
   let now = new Date();

@@ -7,6 +7,7 @@ import { SubjectBreakdownCard } from '../dashboard/SubjectBreakdownCard';
 import { LeetCodeActivityCalendar } from '../dashboard/LeetCodeActivityCalendar';
 import { Flame, Clock, Award, CheckCircle, RotateCcw, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
+import { getAuthHeaders } from '@/context/AuthContext';
 
 interface AnalyticsViewProps {
   stats: ProductivityStats | null;
@@ -19,7 +20,7 @@ export function AnalyticsView({ stats, onRefresh }: AnalyticsViewProps) {
   const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
-    fetch('/api/sessions')
+    fetch('/api/sessions', { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => setSessions(data.sessions || []))
       .catch((err) => console.error('Error fetching sessions:', err));

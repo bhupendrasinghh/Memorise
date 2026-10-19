@@ -17,7 +17,7 @@ export async function PATCH(
   const body = await req.json();
   const { rating = 'good', notes = '', status = 'completed', newScheduledDate, completedAt: clientCompletedAt, clientDate } = body;
 
-  const topics = getUserTopics(session.userId);
+  const topics = getUserTopics(session.userId, session.email);
   const targetTopic = topics.find((t) => t.revisions.some((r) => r.id === revisionId));
 
   if (!targetTopic) {
@@ -53,7 +53,7 @@ export async function PATCH(
 
   const updatedTopic = updateTopic(targetTopic.id, session.userId, {
     revisions: updatedRevisions,
-  });
+  }, session.email);
 
   return NextResponse.json({
     message: 'Revision updated successfully',

@@ -8,6 +8,7 @@ import { soundEngine } from '@/lib/audio';
 import { useToast } from '@/context/ToastContext';
 import { RevisionRating } from '@/lib/types';
 import { format } from 'date-fns';
+import { getAuthHeaders } from '@/context/AuthContext';
 
 interface RevisionReviewModalProps {
   revision: EnrichedRevisionItem | null;
@@ -34,7 +35,7 @@ export function RevisionReviewModal({
     try {
       const res = await fetch(`/api/revisions/${revision.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           rating,
           notes: reviewNotes,

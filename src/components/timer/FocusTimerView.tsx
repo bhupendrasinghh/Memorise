@@ -7,6 +7,7 @@ import { sendBrowserNotification } from '@/lib/notifications';
 import { useToast } from '@/context/ToastContext';
 import confetti from 'canvas-confetti';
 import { format } from 'date-fns';
+import { getAuthHeaders } from '@/context/AuthContext';
 
 interface FocusTimerViewProps {
   onSessionSaved?: () => void;
@@ -63,7 +64,7 @@ export function FocusTimerView({ onSessionSaved }: FocusTimerViewProps) {
         const localDate = format(new Date(), 'yyyy-MM-dd');
         await fetch('/api/sessions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
           body: JSON.stringify({
             subject: sessionSubject,
             durationSeconds: totalSeconds,

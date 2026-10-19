@@ -5,6 +5,7 @@ import { useAlarm } from '@/context/AlarmContext';
 import { Bell, Plus, Trash2, Volume2, Clock, Check, X } from 'lucide-react';
 import { StudyAlarm } from '@/lib/types';
 import { useToast } from '@/context/ToastContext';
+import { getAuthHeaders } from '@/context/AuthContext';
 
 export function AlarmManagerView() {
   const { alarms, reloadAlarms, testSound } = useAlarm();
@@ -30,7 +31,7 @@ export function AlarmManagerView() {
     try {
       const res = await fetch(`/api/alarms/${alarm.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ enabled: !alarm.enabled }),
       });
       if (res.ok) {
@@ -43,7 +44,10 @@ export function AlarmManagerView() {
 
   const handleDeleteAlarm = async (id: string) => {
     try {
-      const res = await fetch(`/api/alarms/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/alarms/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         reloadAlarms();
         success('Alarm Removed', 'Study alarm has been deleted.');
@@ -61,7 +65,7 @@ export function AlarmManagerView() {
     try {
       const res = await fetch('/api/alarms', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           title,
           time,

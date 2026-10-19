@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { ToastProvider, useToast } from '@/context/ToastContext';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthProvider, useAuth, getAuthHeaders } from '@/context/AuthContext';
 import { AlarmProvider } from '@/context/AlarmContext';
 import { StopwatchProvider } from '@/context/StopwatchContext';
 import { Navbar } from '@/components/Navbar';
@@ -92,21 +92,66 @@ function DashboardApp() {
     try {
       setLoading(true);
       const clientToday = format(new Date(), 'yyyy-MM-dd');
+      const authHeaders = getAuthHeaders();
       const [topicsRes, tasksRes, revisionsRes, statsRes] = await Promise.all([
-        fetch('/api/topics'),
-        fetch('/api/tasks'),
-        fetch(`/api/revisions?date=${clientToday}`),
-        fetch(`/api/analytics?date=${clientToday}`),
+        fetch('/api/topics', { headers: authHeaders }),
+        fetch('/api/tasks', { headers: authHeaders }),
+        fetch(`/api/revisions?date=${clientToday}`, { headers: authHeaders }),
+        fetch(`/api/analytics?date=${clientToday}`, { headers: authHeaders }),
       ]);
+
+      let curTopics: Topic[] = [];
+      let curTasks: Task[] = [];
 
       if (topicsRes.ok) {
         const d = await topicsRes.json();
-        setTopics(d.topics || []);
+        curTopics = d.topics || [];
       }
       if (tasksRes.ok) {
         const d = await tasksRes.json();
-        setTasks(d.tasks || []);
+        curTasks = d.tasks || [];
       }
+
+      // Resilient Multi-Device Auto-Backup & Server Re-hydration
+      if (typeof window !== 'undefined' && user?.email) {
+        const backupKey = `memorise_cloud_backup_${user.email.toLowerCase()}`;
+        if (curTopics.length === 0 && curTasks.length === 0) {
+          // If server returned empty, check if we have previous items saved in client backup
+          try {
+            const raw = localStorage.getItem(backupKey);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if ((parsed.tasks && parsed.tasks.length > 0) || (parsed.topics && parsed.topics.length > 0)) {
+                // Auto-restore server state!
+                await fetch('/api/sync', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', ...authHeaders },
+                  body: JSON.stringify(parsed),
+                });
+                curTopics = parsed.topics || [];
+                curTasks = parsed.tasks || [];
+              }
+            }
+          } catch (e) {
+            console.warn('Auto restore check failed', e);
+          }
+        } else {
+          // Update client backup with latest loaded server data
+          try {
+            localStorage.setItem(backupKey, JSON.stringify({
+              tasks: curTasks,
+              topics: curTopics,
+              updatedAt: new Date().toISOString(),
+            }));
+          } catch (e) {
+            console.warn('Auto backup save failed', e);
+          }
+        }
+      }
+
+      setTopics(curTopics);
+      setTasks(curTasks);
+
       if (revisionsRes.ok) {
         const d = await revisionsRes.json();
         setDueRevisions(d.dueToday || []);
@@ -121,7 +166,7 @@ function DashboardApp() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchData();
@@ -171,7 +216,7 @@ function DashboardApp() {
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           status: nextStatus,
           completedAt: nextStatus === 'completed' ? localNow : null,
@@ -192,7 +237,7 @@ function DashboardApp() {
     try {
       const res = await fetch(`/api/tasks/${taskId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           toggleSubtask: true,
           subtaskId,
@@ -210,7 +255,10 @@ function DashboardApp() {
 
   const handleDeleteTask = async (taskId: string) => {
     try {
-      const res = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         success('Task Deleted', 'The task has been removed.');
         fetchData();
@@ -223,7 +271,10 @@ function DashboardApp() {
   const handleDeleteTopic = async (topicId: string) => {
     if (!confirm('Are you sure you want to delete this topic and its revision schedules?')) return;
     try {
-      const res = await fetch(`/api/topics/${topicId}`, { method: 'DELETE' });
+      const res = await fetch(`/api/topics/${topicId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         success('Topic Deleted', 'Topic and its 6 revision intervals removed.');
         fetchData();

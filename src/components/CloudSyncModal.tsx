@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Cloud, Download, Upload, ShieldCheck, Database, CheckCircle2, AlertTriangle, ExternalLink } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, getAuthHeaders } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 
 interface CloudSyncModalProps {
@@ -19,7 +19,7 @@ export function CloudSyncModal({ isOpen, onClose }: CloudSyncModalProps) {
 
   useEffect(() => {
     if (isOpen) {
-      fetch('/api/sync')
+      fetch('/api/sync', { headers: getAuthHeaders() })
         .then((res) => res.json())
         .then((data) => setSyncStatus(data))
         .catch((err) => console.error('Failed to load sync status', err));
@@ -33,7 +33,7 @@ export function CloudSyncModal({ isOpen, onClose }: CloudSyncModalProps) {
     try {
       const res = await fetch('/api/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ action: 'export' }),
       });
       const data = await res.json();
@@ -67,7 +67,7 @@ export function CloudSyncModal({ isOpen, onClose }: CloudSyncModalProps) {
 
       const res = await fetch('/api/sync', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ action: 'import', data: parsed }),
       });
       const result = await res.json();

@@ -111,7 +111,8 @@
           "rating": null,
           "notes": ""
         }
-      ]
+      ],
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "top-002",
@@ -195,7 +196,8 @@
           "rating": null,
           "notes": ""
         }
-      ]
+      ],
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "top-003",
@@ -279,7 +281,8 @@
           "rating": null,
           "notes": ""
         }
-      ]
+      ],
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "top-004",
@@ -363,7 +366,8 @@
           "rating": null,
           "notes": ""
         }
-      ]
+      ],
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "top-1792435665974-jwzk",
@@ -443,7 +447,8 @@
           "rating": null,
           "notes": ""
         }
-      ]
+      ],
+      "userEmail": "demo@memorise.app"
     }
   ],
   "tasks": [
@@ -475,7 +480,8 @@
         }
       ],
       "createdAt": "2026-10-19",
-      "completedAt": null
+      "completedAt": null,
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "task-002",
@@ -500,7 +506,8 @@
         }
       ],
       "createdAt": "2026-10-20",
-      "completedAt": null
+      "completedAt": null,
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "task-003",
@@ -514,7 +521,8 @@
       "status": "pending",
       "subtasks": [],
       "createdAt": "2026-10-20",
-      "completedAt": null
+      "completedAt": null,
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "task-004",
@@ -544,7 +552,8 @@
         }
       ],
       "createdAt": "2026-10-16",
-      "completedAt": null
+      "completedAt": null,
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "task-005",
@@ -558,7 +567,8 @@
       "status": "pending",
       "subtasks": [],
       "createdAt": "2026-10-18",
-      "completedAt": null
+      "completedAt": null,
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "task-006",
@@ -588,7 +598,8 @@
         }
       ],
       "createdAt": "2026-10-05",
-      "completedAt": null
+      "completedAt": null,
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "task-1792435747783-diwi",
@@ -602,11 +613,13 @@
       "status": "pending",
       "subtasks": [],
       "createdAt": "2026-10-20",
-      "completedAt": null
+      "completedAt": null,
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "task-1792436501605-nwad",
       "userId": "usr-1792436246351-8ejk3",
+      "userEmail": "bhupendrasingh952891@gmail.com",
       "title": "8-10 hrs",
       "description": "min 8 hrs study",
       "type": "daily",
@@ -621,11 +634,27 @@
     {
       "id": "task-1792436548790-8akl",
       "userId": "usr-1792436246351-8ejk3",
+      "userEmail": "bhupendrasingh952891@gmail.com",
       "title": "3-4 bottle water",
       "description": "",
       "type": "daily",
       "priority": "high",
       "category": "Personal",
+      "deadline": "2026-10-20",
+      "status": "pending",
+      "subtasks": [],
+      "createdAt": "2026-10-20",
+      "completedAt": null
+    },
+    {
+      "id": "task-1792451593260-f5rh",
+      "userId": "usr-1792436246351-8ejk3",
+      "userEmail": "bhupendrasingh952891@gmail.com",
+      "title": "LeetCode Problem Solving",
+      "description": "",
+      "type": "daily",
+      "priority": "medium",
+      "category": "Study",
       "deadline": "2026-10-20",
       "status": "pending",
       "subtasks": [],
@@ -648,7 +677,8 @@
       ],
       "enabled": false,
       "sound": "chime",
-      "createdAt": "2026-10-10"
+      "createdAt": "2026-10-10",
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "alm-002",
@@ -665,7 +695,8 @@
       ],
       "enabled": true,
       "sound": "bell",
-      "createdAt": "2026-10-10"
+      "createdAt": "2026-10-10",
+      "userEmail": "demo@memorise.app"
     },
     {
       "id": "alm-003",
@@ -683,7 +714,8 @@
       ],
       "enabled": true,
       "sound": "digital",
-      "createdAt": "2026-10-10"
+      "createdAt": "2026-10-10",
+      "userEmail": "demo@memorise.app"
     }
   ],
   "sessions": []

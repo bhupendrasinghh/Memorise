@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const alarms = getUserAlarms(session.userId);
+  const alarms = getUserAlarms(session.userId, session.email);
   return NextResponse.json({ alarms });
 }
 
@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
     const newAlarm: StudyAlarm = {
       id: alarmId,
       userId: session.userId,
+      userEmail: session.email ? session.email.toLowerCase() : undefined,
       title: title.trim(),
       time, // HH:mm
       days: Array.isArray(days) ? days : [],

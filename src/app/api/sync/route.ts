@@ -1,93 +1,174 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDatabase, writeDatabase, DatabaseSchema } from '@/lib/db';
-import { isSupabaseConfigured, fetchRemoteState, persistRemoteState } from '@/lib/supabase';
 import { getSessionFromRequest } from '@/lib/auth';
+import {
+  getUserTasks,
+  getUserTopics,
+  getUserSessions,
+  getUserAlarms,
+  readDatabase,
+  writeDatabase,
+  findUserById,
+  findUserByEmail,
+} from '@/lib/db';
+import { Task, Topic, StudySession, StudyAlarm } from '@/lib/types';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
-  try {
-    const session = getSessionFromRequest(req);
-    const db = readDatabase();
-
+  const session = getSessionFromRequest(req);
+  if (!session) {
     return NextResponse.json({
-      status: 'ok',
+      error: 'Unauthorized',
       isSupabaseConfigured,
-      syncEngine: isSupabaseConfigured ? 'supabase_cloud' : 'local_json_ephemeral',
-      counts: {
-        users: db.users.length,
-        topics: session ? db.topics.filter((t) => t.userId === session.userId).length : db.topics.length,
-        tasks: session ? db.tasks.filter((t) => t.userId === session.userId).length : db.tasks.length,
-        alarms: session ? db.alarms.filter((a) => a.userId === session.userId).length : db.alarms.length,
-      },
-      user: session ? { id: session.userId, email: session.email, name: session.name } : null,
-      serverTime: new Date().toISOString(),
-    });
-  } catch (err) {
-    console.error('Sync GET error:', err);
-    return NextResponse.json({ error: 'Failed to inspect sync status' }, { status: 500 });
+    }, { status: 401 });
   }
+
+  const user = findUserById(session.userId) || (session.email ? findUserByEmail(session.email) : undefined);
+  const tasks = getUserTasks(session.userId, session.email);
+  const topics = getUserTopics(session.userId, session.email);
+  const sessions = getUserSessions(session.userId, session.email);
+  const alarms = getUserAlarms(session.userId, session.email);
+
+  return NextResponse.json({
+    user,
+    tasks,
+    topics,
+    sessions,
+    alarms,
+    isSupabaseConfigured,
+    syncedAt: new Date().toISOString(),
+  });
 }
 
 export async function POST(req: NextRequest) {
+  const session = getSessionFromRequest(req);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
-    const session = getSessionFromRequest(req);
     const body = await req.json();
-    const action = body.action || 'sync';
+    const cleanEmail = session.email ? session.email.toLowerCase() : '';
 
-    // 1. Export Data Backup
-    if (action === 'export') {
-      const db = readDatabase();
-      return NextResponse.json({
-        exportDate: new Date().toISOString(),
-        version: '1.0',
-        data: db,
-      });
-    }
-
-    // 2. Import / Restore Data from Backup
-    if (action === 'import') {
-      const incomingData = body.data as DatabaseSchema;
-      if (!incomingData || !Array.isArray(incomingData.users)) {
-        return NextResponse.json({ error: 'Invalid backup format' }, { status: 400 });
-      }
-
-      writeDatabase(incomingData);
-      if (isSupabaseConfigured) {
-        await persistRemoteState(incomingData);
-      }
+    // If client requested export
+    if (body.action === 'export') {
+      const user = findUserById(session.userId) || (session.email ? findUserByEmail(session.email) : undefined);
+      const tasks = getUserTasks(session.userId, session.email);
+      const topics = getUserTopics(session.userId, session.email);
+      const sessions = getUserSessions(session.userId, session.email);
+      const alarms = getUserAlarms(session.userId, session.email);
 
       return NextResponse.json({
-        message: 'Database restored successfully',
-        counts: {
-          users: incomingData.users.length,
-          topics: incomingData.topics?.length || 0,
-          tasks: incomingData.tasks?.length || 0,
+        data: {
+          user,
+          tasks,
+          topics,
+          sessions,
+          alarms,
+          exportedAt: new Date().toISOString(),
+          version: '1.0.0',
         },
       });
     }
 
-    // 3. Force Cloud Pull
-    if (action === 'pull' && isSupabaseConfigured) {
-      const remote = await fetchRemoteState();
-      if (remote) {
-        writeDatabase(remote);
-        return NextResponse.json({ message: 'Synchronized from Supabase Cloud', data: remote });
+    // Otherwise, payload is import or sync/restore
+    const payload = body.data || body;
+    const tasks: Task[] = Array.isArray(payload.tasks) ? payload.tasks : [];
+    const topics: Topic[] = Array.isArray(payload.topics) ? payload.topics : [];
+    const sessions: StudySession[] = Array.isArray(payload.sessions) ? payload.sessions : [];
+    const alarms: StudyAlarm[] = Array.isArray(payload.alarms) ? payload.alarms : [];
+
+    const db = readDatabase();
+    let restoredTasks = 0;
+    let restoredTopics = 0;
+    let restoredSessions = 0;
+    let restoredAlarms = 0;
+
+    // Merge Tasks
+    for (const t of tasks) {
+      if (!t || !t.id || !t.title) continue;
+      const existingIdx = db.tasks.findIndex((item) => item.id === t.id);
+      const normalizedTask: Task = {
+        ...t,
+        userId: session.userId,
+        userEmail: cleanEmail || t.userEmail,
+      };
+
+      if (existingIdx === -1) {
+        db.tasks.push(normalizedTask);
+        restoredTasks++;
+      } else {
+        db.tasks[existingIdx] = { ...db.tasks[existingIdx], ...normalizedTask };
       }
-      return NextResponse.json({ message: 'No remote state found in Supabase yet' }, { status: 404 });
     }
 
-    // 4. Force Cloud Push
-    if (action === 'push' && isSupabaseConfigured) {
-      const local = readDatabase();
-      const success = await persistRemoteState(local);
-      return NextResponse.json({
-        message: success ? 'Pushed to Supabase Cloud' : 'Failed to push to Supabase Cloud',
-        success,
-      });
+    // Merge Topics
+    for (const top of topics) {
+      if (!top || !top.id || !top.title) continue;
+      const existingIdx = db.topics.findIndex((item) => item.id === top.id);
+      const normalizedTopic: Topic = {
+        ...top,
+        userId: session.userId,
+        userEmail: cleanEmail || top.userEmail,
+      };
+
+      if (existingIdx === -1) {
+        db.topics.push(normalizedTopic);
+        restoredTopics++;
+      } else {
+        db.topics[existingIdx] = { ...db.topics[existingIdx], ...normalizedTopic };
+      }
     }
 
-    return NextResponse.json({ error: 'Unknown sync action' }, { status: 400 });
+    // Merge Sessions
+    for (const s of sessions) {
+      if (!s || !s.id) continue;
+      const existingIdx = db.sessions.findIndex((item) => item.id === s.id);
+      const normalizedSession: StudySession = {
+        ...s,
+        userId: session.userId,
+        userEmail: cleanEmail || s.userEmail,
+      };
+
+      if (existingIdx === -1) {
+        db.sessions.push(normalizedSession);
+        restoredSessions++;
+      }
+    }
+
+    // Merge Alarms
+    for (const a of alarms) {
+      if (!a || !a.id) continue;
+      const existingIdx = db.alarms.findIndex((item) => item.id === a.id);
+      const normalizedAlarm: StudyAlarm = {
+        ...a,
+        userId: session.userId,
+        userEmail: cleanEmail || a.userEmail,
+      };
+
+      if (existingIdx === -1) {
+        db.alarms.push(normalizedAlarm);
+        restoredAlarms++;
+      }
+    }
+
+    writeDatabase(db);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Cloud data synchronized and restored successfully',
+      restored: {
+        tasks: restoredTasks,
+        topics: restoredTopics,
+        sessions: restoredSessions,
+        alarms: restoredAlarms,
+      },
+      currentTotals: {
+        tasks: db.tasks.filter((t) => t.userId === session.userId || (cleanEmail && t.userEmail === cleanEmail)).length,
+        topics: db.topics.filter((t) => t.userId === session.userId || (cleanEmail && t.userEmail === cleanEmail)).length,
+      },
+    });
   } catch (err) {
-    console.error('Sync POST error:', err);
-    return NextResponse.json({ error: 'Sync operation failed' }, { status: 500 });
+    console.error('Error during data sync:', err);
+    return NextResponse.json({ error: 'Internal server error during sync' }, { status: 500 });
   }
 }

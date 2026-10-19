@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromRequest } from '@/lib/auth';
-import { findUserById, updateUser, getUserTopics, getUserTasks, getUserSessions } from '@/lib/db';
+import { findUserById, findUserByEmail, updateUser, getUserTopics, getUserTasks, getUserSessions } from '@/lib/db';
 import { generateDailyWhatsAppReport, sendAutomatedWhatsApp } from '@/lib/whatsapp';
 
 export async function GET(req: NextRequest) {
@@ -10,14 +10,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = findUserById(session.userId);
+    const user = findUserById(session.userId) || (session.email ? findUserByEmail(session.email) : undefined);
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const topics = getUserTopics(user.id);
-    const tasks = getUserTasks(user.id);
-    const sessions = getUserSessions(user.id);
+    const topics = getUserTopics(user.id, user.email);
+    const tasks = getUserTasks(user.id, user.email);
+    const sessions = getUserSessions(user.id, user.email);
 
     const reportData = generateDailyWhatsAppReport(user, topics, tasks, sessions);
 
@@ -44,10 +44,15 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const user = findUserById(session.userId) || (session.email ? findUserByEmail(session.email) : undefined);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const body = await req.json();
     const { whatsappNumber, whatsappTime, whatsappEnabled } = body;
 
-    const updated = updateUser(session.userId, {
+    const updated = updateUser(user.id, {
       whatsappNumber: typeof whatsappNumber === 'string' ? whatsappNumber.trim() : undefined,
       whatsappTime: typeof whatsappTime === 'string' ? whatsappTime.trim() : '17:00',
       whatsappEnabled: Boolean(whatsappEnabled),
@@ -78,7 +83,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = findUserById(session.userId);
+    const user = findUserById(session.userId) || (session.email ? findUserByEmail(session.email) : undefined);
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -90,9 +95,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Please enter a valid WhatsApp phone number' }, { status: 400 });
     }
 
-    const topics = getUserTopics(user.id);
-    const tasks = getUserTasks(user.id);
-    const sessions = getUserSessions(user.id);
+    const topics = getUserTopics(user.id, user.email);
+    const tasks = getUserTasks(user.id, user.email);
+    const sessions = getUserSessions(user.id, user.email);
 
     const reportData = generateDailyWhatsAppReport(
       { ...user, whatsappNumber: targetPhone },

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const topics = getUserTopics(session.userId);
+  const topics = getUserTopics(session.userId, session.email);
   const clientDate = req.nextUrl.searchParams.get('date');
   let now = new Date();
   if (clientDate && /^\d{4}-\d{2}-\d{2}$/.test(clientDate)) {

@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const topics = getUserTopics(session.userId);
+  const topics = getUserTopics(session.userId, session.email);
   return NextResponse.json({ topics });
 }
 
@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
     const newTopic: Topic = {
       id: topicId,
       userId: session.userId,
+      userEmail: session.email ? session.email.toLowerCase() : undefined,
       title: title.trim(),
       subject: subject.trim(),
       content: content ? content.trim() : '',

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserByEmail, createUser } from '@/lib/db';
+import { findUserByEmail, createUser, getDeterministicUserId } from '@/lib/db';
 import { hashPassword, signToken, setSessionCookie } from '@/lib/auth';
 import { User } from '@/lib/types';
 import { format } from 'date-fns';
@@ -16,7 +16,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Password must be at least 6 characters long' }, { status: 400 });
     }
 
-    const existing = findUserByEmail(email);
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = findUserByEmail(cleanEmail);
     if (existing) {
       return NextResponse.json({ error: 'An account with this email already exists' }, { status: 409 });
     }
@@ -25,9 +26,9 @@ export async function POST(req: NextRequest) {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
 
     const newUser: User = {
-      id: `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      id: getDeterministicUserId(cleanEmail),
       name: name.trim(),
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       passwordHash,
       dailyStudyTargetMinutes: 120,
       streakDays: 1,

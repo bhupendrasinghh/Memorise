@@ -14,7 +14,7 @@ import {
   Sparkles,
   AlertCircle,
 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, getAuthHeaders } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 
 interface WhatsAppModalProps {
@@ -42,7 +42,7 @@ export function WhatsAppModal({ isOpen, onClose }: WhatsAppModalProps) {
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
-      fetch('/api/whatsapp')
+      fetch('/api/whatsapp', { headers: getAuthHeaders() })
         .then((res) => res.json())
         .then((data) => {
           if (data.settings) {
@@ -66,7 +66,7 @@ export function WhatsAppModal({ isOpen, onClose }: WhatsAppModalProps) {
     try {
       const res = await fetch('/api/whatsapp', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           whatsappNumber: phone,
           whatsappTime: time,
@@ -79,7 +79,7 @@ export function WhatsAppModal({ isOpen, onClose }: WhatsAppModalProps) {
       success('WhatsApp Settings Saved!', `Daily report scheduled at ${time} for ${phone || 'your number'}.`);
 
       // Refresh preview
-      const previewRes = await fetch('/api/whatsapp');
+      const previewRes = await fetch('/api/whatsapp', { headers: getAuthHeaders() });
       const previewData = await previewRes.json();
       if (previewData.report) setReportText(previewData.report);
       if (previewData.whatsappUrl) setWhatsappUrl(previewData.whatsappUrl);
@@ -100,7 +100,7 @@ export function WhatsAppModal({ isOpen, onClose }: WhatsAppModalProps) {
     try {
       const res = await fetch('/api/whatsapp', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ phone }),
       });
       const data = await res.json();

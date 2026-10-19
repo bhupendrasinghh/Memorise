@@ -5,6 +5,7 @@ import { LeaderboardUser } from '@/lib/types';
 import { Trophy, Flame, Medal, Award, Crown, Repeat, CheckSquare, Clock, Zap, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundEngine } from '@/lib/audio';
+import { getAuthHeaders } from '@/context/AuthContext';
 
 export function LeaderboardView() {
   const [users, setUsers] = useState<LeaderboardUser[]>([]);
@@ -13,7 +14,7 @@ export function LeaderboardView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/leaderboard')
+    fetch('/api/leaderboard', { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         setUsers(data.leaderboard || []);

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, BookOpen, Calendar, Tag, AlertCircle, Sparkles } from 'lucide-react';
 import { addDays, format, parseISO } from 'date-fns';
 import { STANDARD_INTERVALS } from '@/lib/spaced-repetition';
+import { getAuthHeaders } from '@/context/AuthContext';
 
 interface TopicModalProps {
   isOpen: boolean;
@@ -41,7 +42,7 @@ export function TopicModal({ isOpen, onClose, onTopicCreated }: TopicModalProps)
     try {
       const res = await fetch('/api/topics', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           title,
           subject,

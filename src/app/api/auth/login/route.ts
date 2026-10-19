@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findUserByEmail, updateUser, createUser } from '@/lib/db';
+import { findUserByEmail, updateUser, createUser, getDeterministicUserId } from '@/lib/db';
 import { verifyPassword, hashPassword, signToken, setSessionCookie } from '@/lib/auth';
 import { differenceInCalendarDays, parseISO, format } from 'date-fns';
 import { User } from '@/lib/types';
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         .replace(/\b\w/g, (c: string) => c.toUpperCase());
 
       const newUser: User = {
-        id: `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        id: getDeterministicUserId(cleanEmail),
         name: displayName || 'Learner',
         email: cleanEmail,
         passwordHash,

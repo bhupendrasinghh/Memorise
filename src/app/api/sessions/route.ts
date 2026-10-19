@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const sessions = getUserSessions(session.userId);
+  const sessions = getUserSessions(session.userId, session.email);
   return NextResponse.json({
     sessions: sessions.sort((a, b) => b.completedAt.localeCompare(a.completedAt)),
   });
@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
     const newSession: StudySession = {
       id: sessionId,
       userId: session.userId,
+      userEmail: session.email ? session.email.toLowerCase() : undefined,
       subject: subject || 'General Study',
       topicTitle: topicTitle || '',
       durationSeconds: Math.round(durationSeconds),

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { X, CheckSquare, Plus, Trash2, Calendar, AlertTriangle, Layers } from 'lucide-react';
 import { TaskType, Priority, TaskCategory } from '@/lib/types';
 import { format } from 'date-fns';
+import { getAuthHeaders } from '@/context/AuthContext';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -52,7 +53,7 @@ export function TaskModal({
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           title,
           description,

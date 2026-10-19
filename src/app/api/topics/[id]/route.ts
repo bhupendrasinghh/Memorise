@@ -12,7 +12,7 @@ export async function GET(
   }
 
   const { id } = await params;
-  const topics = getUserTopics(session.userId);
+  const topics = getUserTopics(session.userId, session.email);
   const topic = topics.find((t) => t.id === id);
 
   if (!topic) {
@@ -34,7 +34,7 @@ export async function PUT(
   const { id } = await params;
   try {
     const body = await req.json();
-    const updated = updateTopic(id, session.userId, body);
+    const updated = updateTopic(id, session.userId, body, session.email);
 
     if (!updated) {
       return NextResponse.json({ error: 'Topic not found or unauthorized' }, { status: 404 });
@@ -57,7 +57,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const deleted = deleteTopic(id, session.userId);
+  const deleted = deleteTopic(id, session.userId, session.email);
 
   if (!deleted) {
     return NextResponse.json({ error: 'Topic not found or unauthorized' }, { status: 404 });

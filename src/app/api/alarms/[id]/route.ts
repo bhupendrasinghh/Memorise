@@ -14,7 +14,7 @@ export async function PUT(
   const { id } = await params;
   try {
     const body = await req.json();
-    const updated = updateAlarm(id, session.userId, body);
+    const updated = updateAlarm(id, session.userId, body, session.email);
 
     if (!updated) {
       return NextResponse.json({ error: 'Alarm not found' }, { status: 404 });
@@ -37,7 +37,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const deleted = deleteAlarm(id, session.userId);
+  const deleted = deleteAlarm(id, session.userId, session.email);
 
   if (!deleted) {
     return NextResponse.json({ error: 'Alarm not found' }, { status: 404 });

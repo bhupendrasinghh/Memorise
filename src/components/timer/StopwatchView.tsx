@@ -6,6 +6,7 @@ import { soundEngine } from '@/lib/audio';
 import { useToast } from '@/context/ToastContext';
 import { useStopwatch } from '@/context/StopwatchContext';
 import { format } from 'date-fns';
+import { getAuthHeaders } from '@/context/AuthContext';
 
 export function StopwatchView({ onSessionSaved }: { onSessionSaved?: () => void }) {
   const { success } = useToast();
@@ -36,7 +37,7 @@ export function StopwatchView({ onSessionSaved }: { onSessionSaved?: () => void 
       const localDate = format(new Date(), 'yyyy-MM-dd');
       const res = await fetch('/api/sessions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({
           subject: sessionSubject,
           durationSeconds: Math.round(elapsedMs / 1000),
