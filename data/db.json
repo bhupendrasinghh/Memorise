@@ -9,7 +9,10 @@
       "dailyStudyTargetMinutes": 120,
       "streakDays": 1,
       "lastActiveDate": "2026-10-20",
-      "createdAt": "2026-07-22"
+      "createdAt": "2026-07-22",
+      "whatsappNumber": "",
+      "whatsappTime": "17:00",
+      "whatsappEnabled": true
     },
     {
       "id": "usr-1792436246351-8ejk3",
@@ -19,7 +22,10 @@
       "dailyStudyTargetMinutes": 120,
       "streakDays": 1,
       "lastActiveDate": "2026-10-20",
-      "createdAt": "2026-10-20"
+      "createdAt": "2026-10-20",
+      "whatsappTime": "17:00",
+      "whatsappEnabled": true,
+      "whatsappNumber": "+91 9528912345"
     }
   ],
   "topics": [

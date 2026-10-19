@@ -92,6 +92,9 @@ export interface User {
   streakDays: number;
   lastActiveDate?: string | null; // YYYY-MM-DD
   createdAt: string;
+  whatsappNumber?: string; // with country code, e.g. +919876543210
+  whatsappTime?: string; // e.g. "17:00" (5:00 PM)
+  whatsappEnabled?: boolean;
 }
 
 export interface UserPublicProfile {
@@ -103,6 +106,9 @@ export interface UserPublicProfile {
   streakDays: number;
   lastActiveDate?: string | null;
   createdAt: string;
+  whatsappNumber?: string;
+  whatsappTime?: string;
+  whatsappEnabled?: boolean;
 }
 
 export interface ProductivityStats {
