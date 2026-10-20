@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromRequest } from '@/lib/auth';
 import { getUserTopics } from '@/lib/db';
 import { getCalculatedRevisionStatus } from '@/lib/spaced-repetition';
-import { RevisionScheduleItem, Topic } from '@/lib/types';
+import { RevisionScheduleItem, Topic, TopicAttachment } from '@/lib/types';
 import { parseISO, startOfDay, isToday, isBefore } from 'date-fns';
 
 export interface EnrichedRevisionItem extends RevisionScheduleItem {
@@ -12,6 +12,7 @@ export interface EnrichedRevisionItem extends RevisionScheduleItem {
   topicContent: string;
   difficulty?: 'easy' | 'medium' | 'hard';
   computedStatus: 'due' | 'overdue' | 'upcoming' | 'completed' | 'skipped';
+  attachments?: TopicAttachment[];
 }
 
 export async function GET(req: NextRequest) {
@@ -41,6 +42,7 @@ export async function GET(req: NextRequest) {
         topicContent: topic.content,
         difficulty: topic.difficulty,
         computedStatus,
+        attachments: topic.attachments || [],
       });
     }
   }

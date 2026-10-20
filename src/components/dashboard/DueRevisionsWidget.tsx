@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { EnrichedRevisionItem } from '@/app/api/revisions/route';
-import { Repeat, Calendar, CheckCircle, ArrowRight, AlertCircle } from 'lucide-react';
+import { Repeat, Calendar, CheckCircle, ArrowRight, AlertCircle, Paperclip } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { soundEngine } from '@/lib/audio';
 import { useToast } from '@/context/ToastContext';
@@ -114,6 +114,11 @@ export function DueRevisionsWidget({
                     {isOverdue && (
                       <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-0.5">
                         <AlertCircle className="w-3 h-3" /> Overdue
+                      </span>
+                    )}
+                    {rev.attachments && rev.attachments.length > 0 && (
+                      <span className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-0.5">
+                        <Paperclip className="w-3 h-3" /> {rev.attachments.length} doc{rev.attachments.length > 1 ? 's' : ''}
                       </span>
                     )}
                   </div>

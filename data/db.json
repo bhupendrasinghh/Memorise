@@ -718,5 +718,17 @@
       "userEmail": "demo@memorise.app"
     }
   ],
-  "sessions": []
+  "sessions": [
+    {
+      "id": "ses-1792484713460-112w",
+      "userId": "usr-1792436246351-8ejk3",
+      "userEmail": "bhupendrasingh952891@gmail.com",
+      "subject": "Computer Science",
+      "topicTitle": "",
+      "durationSeconds": 35491,
+      "type": "stopwatch",
+      "completedAt": "2026-10-20 13:55:13",
+      "notes": "Tracked with stopwatch (1 laps recorded)"
+    }
+  ]
 }

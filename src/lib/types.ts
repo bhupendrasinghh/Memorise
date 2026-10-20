@@ -46,6 +46,17 @@ export interface RevisionScheduleItem {
   notes?: string;
 }
 
+export type AttachmentType = 'pdf' | 'word' | 'image' | 'other';
+
+export interface TopicAttachment {
+  id: string;
+  name: string;
+  type: AttachmentType;
+  size: number;
+  dataUrl: string;
+  uploadedAt: string;
+}
+
 export interface Topic {
   id: string;
   userId: string;
@@ -60,6 +71,7 @@ export interface Topic {
   revisions: RevisionScheduleItem[];
   color?: string;
   difficulty?: 'easy' | 'medium' | 'hard';
+  attachments?: TopicAttachment[];
 }
 
 export interface StudyAlarm {

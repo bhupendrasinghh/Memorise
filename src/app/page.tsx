@@ -6,12 +6,13 @@ import { ToastProvider, useToast } from '@/context/ToastContext';
 import { AuthProvider, useAuth, getAuthHeaders } from '@/context/AuthContext';
 import { AlarmProvider } from '@/context/AlarmContext';
 import { StopwatchProvider } from '@/context/StopwatchContext';
+import { FocusProvider } from '@/context/FocusContext';
 import { Navbar } from '@/components/Navbar';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileNav } from '@/components/MobileNav';
 import { AuthModal } from '@/components/AuthModal';
 import { WhatsAppModal } from '@/components/whatsapp/WhatsAppModal';
-import { FloatingStopwatchWidget } from '@/components/timer/FloatingStopwatchWidget';
+import { FloatingTimerWidget } from '@/components/timer/FloatingTimerWidget';
 
 import { ProductivityCard } from '@/components/dashboard/ProductivityCard';
 import { DueRevisionsWidget } from '@/components/dashboard/DueRevisionsWidget';
@@ -35,7 +36,7 @@ import { AlarmManagerView } from '@/components/timer/AlarmManagerView';
 import { AnalyticsView } from '@/components/analytics/AnalyticsView';
 import { LeaderboardView } from '@/components/leaderboard/LeaderboardView';
 
-import { Topic, Task, ProductivityStats, RevisionScheduleItem, TaskType } from '@/lib/types';
+import { Topic, Task, ProductivityStats, RevisionScheduleItem, TaskType, StudySession } from '@/lib/types';
 import { EnrichedRevisionItem } from './api/revisions/route';
 import {
   Repeat,
@@ -86,22 +87,23 @@ function DashboardApp() {
   // Subtab for Timer
   const [timerSubtab, setTimerSubtab] = useState<'pomodoro' | 'stopwatch'>('pomodoro');
 
-  // Fetch all user data
   // Fetch all user data (passes client local date so midnight rollover updates right after 00:00)
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const clientToday = format(new Date(), 'yyyy-MM-dd');
       const authHeaders = getAuthHeaders();
-      const [topicsRes, tasksRes, revisionsRes, statsRes] = await Promise.all([
+      const [topicsRes, tasksRes, revisionsRes, statsRes, sessionsRes] = await Promise.all([
         fetch('/api/topics', { headers: authHeaders }),
         fetch('/api/tasks', { headers: authHeaders }),
         fetch(`/api/revisions?date=${clientToday}`, { headers: authHeaders }),
         fetch(`/api/analytics?date=${clientToday}`, { headers: authHeaders }),
+        fetch('/api/sessions', { headers: authHeaders }),
       ]);
 
       let curTopics: Topic[] = [];
       let curTasks: Task[] = [];
+      let curSessions: StudySession[] = [];
 
       if (topicsRes.ok) {
         const d = await topicsRes.json();
@@ -111,17 +113,25 @@ function DashboardApp() {
         const d = await tasksRes.json();
         curTasks = d.tasks || [];
       }
+      if (sessionsRes && sessionsRes.ok) {
+        const d = await sessionsRes.json();
+        curSessions = d.sessions || [];
+      }
 
       // Resilient Multi-Device Auto-Backup & Server Re-hydration
       if (typeof window !== 'undefined' && user?.email) {
         const backupKey = `memorise_cloud_backup_${user.email.toLowerCase()}`;
-        if (curTopics.length === 0 && curTasks.length === 0) {
+        if (curTopics.length === 0 && curTasks.length === 0 && curSessions.length === 0) {
           // If server returned empty, check if we have previous items saved in client backup
           try {
             const raw = localStorage.getItem(backupKey);
             if (raw) {
               const parsed = JSON.parse(raw);
-              if ((parsed.tasks && parsed.tasks.length > 0) || (parsed.topics && parsed.topics.length > 0)) {
+              if (
+                (parsed.tasks && parsed.tasks.length > 0) ||
+                (parsed.topics && parsed.topics.length > 0) ||
+                (parsed.sessions && parsed.sessions.length > 0)
+              ) {
                 // Auto-restore server state!
                 await fetch('/api/sync', {
                   method: 'POST',
@@ -130,6 +140,7 @@ function DashboardApp() {
                 });
                 curTopics = parsed.topics || [];
                 curTasks = parsed.tasks || [];
+                curSessions = parsed.sessions || [];
               }
             }
           } catch (e) {
@@ -141,6 +152,7 @@ function DashboardApp() {
             localStorage.setItem(backupKey, JSON.stringify({
               tasks: curTasks,
               topics: curTopics,
+              sessions: curSessions,
               updatedAt: new Date().toISOString(),
             }));
           } catch (e) {
@@ -294,6 +306,7 @@ function DashboardApp() {
       topicContent: topic.content,
       difficulty: topic.difficulty,
       computedStatus: 'due',
+      attachments: topic.attachments || [],
     };
     setReviewModalRevision(enriched);
   };
@@ -546,6 +559,7 @@ function DashboardApp() {
                       topic={topic}
                       onOpenReviewStep={handleOpenReviewFromStep}
                       onDeleteTopic={handleDeleteTopic}
+                      onTopicUpdated={fetchData}
                     />
                   ))}
                 </div>
@@ -747,13 +761,14 @@ function DashboardApp() {
         onClose={() => setWhatsappModalOpen(false)}
       />
 
-      {/* Persistent Floating Stopwatch Mini-Bar across all tabs */}
-      <FloatingStopwatchWidget
-        onOpenTimer={() => {
+      {/* Persistent Floating Timer & Stopwatch Mini-Bar across all tabs */}
+      <FloatingTimerWidget
+        onOpenTimer={(subtab) => {
           setActiveTab('timer');
-          setTimerSubtab('stopwatch');
+          setTimerSubtab(subtab);
         }}
-        isTimerTabActive={activeTab === 'timer' && timerSubtab === 'stopwatch'}
+        isTimerTabActive={activeTab === 'timer'}
+        activeSubtab={timerSubtab}
       />
     </div>
   );
@@ -765,7 +780,9 @@ export default function Home() {
       <AuthProvider>
         <AlarmProvider>
           <StopwatchProvider>
-            <DashboardApp />
+            <FocusProvider>
+              <DashboardApp />
+            </FocusProvider>
           </StopwatchProvider>
         </AlarmProvider>
       </AuthProvider>

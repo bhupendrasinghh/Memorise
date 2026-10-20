@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { title, subject, content, tags, initialStudyDate, difficulty } = body;
+    const { title, subject, content, tags, initialStudyDate, difficulty, attachments } = body;
 
     if (!title || !subject) {
       return NextResponse.json({ error: 'Title and Subject are required' }, { status: 400 });
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
       updatedAt: nowIso,
       difficulty: difficulty || 'medium',
       revisions,
+      attachments: Array.isArray(attachments) ? attachments : [],
     };
 
     createTopic(newTopic);
